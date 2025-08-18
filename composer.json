@@ -17,7 +17,7 @@
         "slim/php-view": "^2.0",
         "monolog/monolog": "^1.23",
         "illuminate/database": "^5.5",
-        "robmorgan/phinx": "dev-master#4c26aeb",
+        "robmorgan/phinx": "^0.13.0",
         "vlucas/phpdotenv": "^2.4",
         "tuupola/slim-jwt-auth": "^2.3",
         "fzaninotto/faker": "^1.7",

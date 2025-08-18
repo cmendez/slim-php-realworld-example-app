@@ -19,7 +19,7 @@ class AuthServiceProvider implements ServiceProviderInterface
      */
     public function register(Container $pimple)
     {
-        $pimple['auth'] = function (ContainerInterface $c) {
+        $pimple['auth'] = function (\Slim\Container $c) {
 
             return new Auth($c->get('db'), $c->get('settings'));
         };

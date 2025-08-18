@@ -27,7 +27,7 @@ class LoginController
      *
      * @param \Interop\Container\ContainerInterface $container
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct(\Slim\Container $container)
     {
         $this->auth = $container->get('auth');
         $this->validator = $container->get('validator');

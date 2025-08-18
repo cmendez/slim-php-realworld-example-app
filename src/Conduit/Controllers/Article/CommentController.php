@@ -32,7 +32,7 @@ class CommentController
      *
      * @internal param $auth
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct(\Slim\Container $container)
     {
         $this->auth = $container->get('auth');
         $this->fractal = $container->get('fractal');

@@ -16,7 +16,7 @@ class BaseMigration extends AbstractMigration
      */
     protected $schema;
     
-    protected function init()
+    public function init()
     {
         $this->schema = (new Capsule)->schema();
     }
