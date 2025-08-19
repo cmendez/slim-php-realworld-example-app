@@ -13,7 +13,7 @@ if (file_exists(ROOT . '.env')) {
 
 return [
     'settings' => [
-        'displayErrorDetails'    => getenv('APP_DEBUG') === 'true' ? true : false, // set to false in production
+        'displayErrorDetails'    => true, // set to false in production
         'addContentLengthHeader' => false, // Allow the web server to send the content-length header
 
         // App Settings

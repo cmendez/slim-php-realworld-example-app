@@ -27,4 +27,12 @@ require __DIR__ . '/../src/middleware.php';
 require __DIR__ . '/../src/routes.php';
 
 // Run app
-$app->run();
+try {
+    $app->run();
+} catch (\Throwable $e) {
+    // Escribe el error completo en el registro de PHP
+    error_log($e->__toString());
+
+    // Opcional: También puedes devolver una respuesta de error si lo deseas,
+    // pero para la depuración, registrar el error es lo más importante.
+}
