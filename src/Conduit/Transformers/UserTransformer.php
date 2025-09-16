@@ -19,6 +19,8 @@ class UserTransformer extends TransformerAbstract
             'bio'       => $user->bio,
             'image'     => $user->image,
             'token'     => $user->token,
+            'twitter_url' => $user->twitter_url,
+            'linkedin_url' => $user->linkedin_url,
         ];
     }
 }

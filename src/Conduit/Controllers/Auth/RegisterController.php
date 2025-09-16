@@ -3,81 +3,52 @@
 namespace Conduit\Controllers\Auth;
 
 use Conduit\Models\User;
-use Conduit\Transformers\UserTransformer;
-use Interop\Container\ContainerInterface;
-use League\Fractal\Resource\Item;
-use Slim\Http\Request;
-use Slim\Http\Response;
-use Respect\Validation\Validator as v;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class RegisterController
 {
-
-    /** @var \Conduit\Validation\Validator */
-    protected $validator;
-    /** @var \Illuminate\Database\Capsule\Manager */
-    protected $db;
-    /** @var \League\Fractal\Manager */
+    protected $auth;
     protected $fractal;
-    /** @var \Conduit\Services\Auth\Auth */
-    private $auth;
 
-    /**
-     * RegisterController constructor.
-     *
-     * @param \Interop\Container\ContainerInterface $container
-     */
     public function __construct(\Slim\Container $container)
     {
         $this->auth = $container->get('auth');
-        $this->validator = $container->get('validator');
-        $this->db = $container->get('db');
         $this->fractal = $container->get('fractal');
     }
 
-    /**
-     * Register New Users from POST Requests to /api/users
-     *
-     * @param \Slim\Http\Request  $request
-     * @param \Slim\Http\Response $response
-     *
-     * @return \Slim\Http\Response
-     */
-    public function register(Request $request, Response $response)
+    public function register(Request $request, Response $response, array $args)
     {
-        $validation = $this->validateRegisterRequest($userParams = $request->getParam('user'));
+        $data = $request->getParsedBody()['user'] ?? [];
 
-        if ($validation->failed()) {
-            return $response->withJson(['errors' => $validation->getErrors()], 422);
+        // Asegurarnos de que los campos necesarios existen
+        if (empty($data['username']) || empty($data['email']) || empty($data['password'])) {
+             return $response->withJson(['errors' => ['body' => ['Invalid data provided']]], 422);
         }
 
-        $user = new User($userParams);
-        $user->token = $this->auth->generateToken($user);
-        $user->password = password_hash($userParams['password'], PASSWORD_DEFAULT);
+        $user = new User([
+            'username' => $data['username'],
+            'email' => $data['email'],
+            'password' => $data['password'], // El mutator en User.php se encargará de hashear esto
+        ]);
+
         $user->save();
 
-        $resource = new Item($user, new UserTransformer());
-        $user = $this->fractal->createData($resource)->toArray();
+        // Generar el token para el nuevo usuario
+        $token = $this->auth->generateToken($user);
 
-        return $response->withJson(
-            [
-                'user' => $user,
-            ]);
-    }
+        $userData = [
+            'user' => [
+                'email' => $user->email,
+                'token' => $token,
+                'username' => $user->username,
+                'bio' => $user->bio,
+                'image' => $user->image,
+            ],
+        ];
 
-    /**
-     * @param array
-     *
-     * @return \Conduit\Validation\Validator
-     */
-    protected function validateRegisterRequest($values)
-    {
-        return $this->validator->validateArray($values,
-            [
-                'email'    => v::noWhitespace()->notEmpty()->email()->existsInTable($this->db->table('users'), 'email'),
-                'username' => v::noWhitespace()->notEmpty()->existsInTable($this->db->table('users'),
-                    'username'),
-                'password' => v::noWhitespace()->notEmpty(),
-            ]);
+        $response->getBody()->write(json_encode($userData));
+
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
     }
 }

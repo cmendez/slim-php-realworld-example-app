@@ -31,6 +31,8 @@ class User extends Model
         'token',
         'image',
         'bio',
+        'twitter_url', // <-- Añadir esta línea
+        'linkedin_url', // <-- Añadir esta línea        
     ];
 
     /**
@@ -164,4 +166,10 @@ class User extends Model
             ->exists();
     }
 
+    public function setPasswordAttribute($value)
+    {
+        if (!empty($value)) {
+            $this->attributes['password'] = password_hash($value, PASSWORD_DEFAULT);
+        }
+    }
 }

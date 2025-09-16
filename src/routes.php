@@ -32,9 +32,17 @@ $app->group('/api',
         $this->get('/profiles/{username}', ProfileController::class . ':show')
             ->add($optionalAuth)
             ->setName('profile.show');
+
+        // Ruta para actualizar el perfil del usuario
+        $this->put('/profiles/{username}', ProfileController::class . ':update')
+            ->add($jwtMiddleware)
+            ->setName('profile.update');
+
+        // Rutas para seguir y dejar de seguir, ahora apuntando al controlador correcto
         $this->post('/profiles/{username}/follow', ProfileController::class . ':follow')
             ->add($jwtMiddleware)
             ->setName('profile.follow');
+            
         $this->delete('/profiles/{username}/follow', ProfileController::class . ':unfollow')
             ->add($jwtMiddleware)
             ->setName('profile.unfollow');

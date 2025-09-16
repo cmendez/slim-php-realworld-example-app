@@ -3,92 +3,73 @@
 namespace Conduit\Controllers\User;
 
 use Conduit\Models\User;
-use Conduit\Transformers\ProfileTransformer;
-use Conduit\Transformers\UserTransformer;
-use Interop\Container\ContainerInterface;
-use League\Fractal\Resource\Item;
-use Slim\Http\Request;
-use Slim\Http\Response;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class ProfileController
 {
-
-    /** @var \Conduit\Services\Auth\Auth */
     protected $auth;
-    /** @var \League\Fractal\Manager */
-    protected $fractal;
 
-    /**
-     * UserController constructor.
-     *
-     * @param \Interop\Container\ContainerInterface $container
-     *
-     * @internal param $auth
-     */
     public function __construct(\Slim\Container $container)
     {
         $this->auth = $container->get('auth');
-        $this->fractal = $container->get('fractal');
     }
 
     public function show(Request $request, Response $response, array $args)
     {
         $user = User::where('username', $args['username'])->firstOrFail();
         $requestUser = $this->auth->requestUser($request);
-        $followingStatus = false;
+        $followingStatus = $requestUser ? $requestUser->isFollowing($user->id) : false;
 
-        if ($requestUser) {
-            $followingStatus = $requestUser->isFollowing($user->id);
+        // Devolvemos todos los campos del perfil directamente desde el usuario
+        $profileData = [
+            'username' => $user->username,
+            'bio' => $user->bio,
+            'image' => $user->image,
+            'twitter_url' => $user->twitter_url,
+            'linkedin_url' => $user->linkedin_url,
+            'following' => $followingStatus,
+        ];
+
+        return $response->withJson(['profile' => $profileData]);
+    }
+
+    public function update(Request $request, Response $response, array $args)
+    {
+        $userToUpdate = User::where('username', $args['username'])->firstOrFail();
+
+        // Usar el servicio de autenticación, igual que los otros controladores
+        $currentUser = $this->auth->requestUser($request);
+
+        // Si el token no es válido o no se envió, $currentUser será null
+        if (!$currentUser) {
+            return $response->withStatus(401); // Unauthorized
         }
 
-        return $response->withJson(
-            [
-                'profile' => [
-                    'username'  => $user->username,
-                    'bio'       => $user->bio,
-                    'image'     => $user->image,
-                    'following' => $followingStatus,
-                ],
-            ]
-        );
+        // Validación de Seguridad: Solo puedes editar tu propio perfil
+        if ($currentUser->id !== $userToUpdate->id) {
+            return $response->withStatus(403); // Forbidden
+        }
+
+        $data = $request->getParsedBody()['user'] ?? [];
+        $userToUpdate->update($data);
+
+        return $this->show($request, $response, $args);
     }
 
     public function follow(Request $request, Response $response, array $args)
     {
         $requestUser = $this->auth->requestUser($request);
         $user = User::query()->where('username', $args['username'])->firstOrFail();
-
         $requestUser->follow($user->id);
-
-        return $response->withJson(
-            [
-                'profile' => [
-                    'username'  => $user->username,
-                    'bio'       => $user->bio,
-                    'image'     => $user->image,
-                    'following' => $user->isFollowedBy($requestUser),
-                ],
-            ]
-        );
+        return $this->show($request, $response, $args);
     }
 
     public function unfollow(Request $request, Response $response, array $args)
     {
         $requestUser = $this->auth->requestUser($request);
         $user = User::query()->where('username', $args['username'])->firstOrFail();
-
         $requestUser->unFollow($user->id);
-
-        return $response->withJson(
-            [
-                'profile' => [
-                    'username'  => $user->username,
-                    'bio'       => $user->bio,
-                    'image'     => $user->image,
-                    'following' => $requestUser->isFollowing($user->id),
-                ],
-            ]
-        );
+        return $this->show($request, $response, $args);
     }
-
 }
