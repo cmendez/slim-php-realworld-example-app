@@ -44,6 +44,7 @@ class ArticleTransformer extends TransformerAbstract
             'updatedAt'      => isset($user->update_at) ? $article->update_at->toIso8601String() : $article->update_at,
             "favorited"      => $article->isFavoritedByUser($this->requestUserId),
             "favoritesCount" => $article->favorites()->count(),
+            'publishDate'    => optional($article->publish_date)->toIso8601String(),
         ];
     }
 

@@ -1,7 +1,7 @@
 <?php
 
 namespace Conduit\Controllers\Article;
-
+use Carbon\Carbon;
 use Conduit\Models\Article;
 use Conduit\Models\Tag;
 use Conduit\Transformers\ArticleTransformer;
@@ -135,20 +135,35 @@ class ArticleController
             return $response->withJson([], 401);
         }
 
-        $this->validator->validateArray($data = $request->getParam('article'),
-            [
-                'title'       => v::notEmpty(),
-                'description' => v::notEmpty(),
-                'body'        => v::notEmpty(),
-            ]);
+        $data = $request->getParam('article');
+
+        $this->validator->validateArray($data, [
+            'title'       => v::notEmpty(),
+            'description' => v::notEmpty(),
+            'body'        => v::notEmpty(),
+            // Mantenemos la validación para asegurarnos de que el formato es correcto
+            'publishDate' => v::optional(v::date()), 
+        ]);
 
         if ($this->validator->failed()) {
             return $response->withJson(['errors' => $this->validator->getErrors()], 422);
         }
-
-        $article = new Article($request->getParam('article'));
+        
+        // Aquí usamos el constructor solo para los campos que no dan problemas
+        $article = new Article([
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'body' => $data['body'],
+        ]);
+        
         $article->slug = str_slug($article->title);
         $article->user_id = $requestUser->id;
+
+        // Verificamos si 'publishDate' existe y creamos un objeto Carbon explícitamente.
+        if (!empty($data['publishDate'])) {
+            $article->publish_date = Carbon::parse($data['publishDate']);
+        }
+
         $article->save();
 
         $tagsId = [];
@@ -159,10 +174,9 @@ class ArticleController
             $article->tags()->sync($tagsId);
         }
 
-        $data = $this->fractal->createData(new Item($article, new ArticleTransformer()))->toArray();
-
+        $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
+        
         return $response->withJson(['article' => $data]);
-
     }
 
     /**
@@ -187,19 +201,47 @@ class ArticleController
             return $response->withJson(['message' => 'Forbidden'], 403);
         }
 
+        // Obtenemos los datos del request en la variable $params
         $params = $request->getParam('article', []);
 
-        $article->update([
-            'title'       => isset($params['title']) ? $params['title'] : $article->title,
-            'description' => isset($params['description']) ? $params['description'] : $article->description,
-            'body'        => isset($params['body']) ? $params['body'] : $article->body,
+        // --- 1. AÑADIR VALIDACIÓN ---
+        $this->validator->validateArray($params, [
+            // Hacemos que todos los campos sean opcionales en la actualización
+            'title'       => v::optional(v::notEmpty()),
+            'description' => v::optional(v::notEmpty()),
+            'publishDate' => v::optional(v::date()),
         ]);
 
-        if (isset($params['title'])) {
-            $article->slug = str_slug($params['title']);
+        if ($this->validator->failed()) {
+            return $response->withJson(['errors' => $this->validator->getErrors()], 422);
         }
 
-        $data = $this->fractal->createData(new Item($article, new ArticleTransformer()))->toArray();
+        // --- 2. ACTUALIZAR CAMPOS INDIVIDUALMENTE ---
+        // Esto es más claro y evita problemas con la asignación masiva
+        if (isset($params['title'])) {
+            $article->title = $params['title'];
+            $article->slug = str_slug($params['title']); // Actualizamos el slug si cambia el título
+        }
+
+        if (isset($params['description'])) {
+            $article->description = $params['description'];
+        }
+
+        if (isset($params['body'])) {
+            $article->body = $params['body'];
+        }
+
+        // --- 3. MANEJAR LA FECHA DE PUBLICACIÓN CON CARBON ---
+        if (isset($params['publishDate'])) {
+            // Si la fecha es un string vacío o nulo, la establecemos como null en la BD.
+            // Si no, la parseamos con Carbon.
+            $article->publish_date = empty($params['publishDate']) ? null : Carbon::parse($params['publishDate']);
+        }
+
+        // --- 4. GUARDAR TODOS LOS CAMBIOS ---
+        $article->save();
+
+        $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
 
         return $response->withJson(['article' => $data]);
     }

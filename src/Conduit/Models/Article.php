@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Database\Eloquent\Collection comments
  * @property \Carbon\Carbon                           created_at
  * @property \Carbon\Carbon                           update_at
+ * @property \Carbon\Carbon                           publish_date
  */
 class Article extends Model
 {
@@ -31,7 +32,12 @@ class Article extends Model
         'description',
         'body',
         'user_id',
+        'publish_date', // <-- AÑADIR ESTO
     ];
+
+    protected $casts = [
+        'publish_date' => 'datetime', // <-- AÑADIR ESTO
+    ];    
 
     public function setSlugAttribute($value)
     {
