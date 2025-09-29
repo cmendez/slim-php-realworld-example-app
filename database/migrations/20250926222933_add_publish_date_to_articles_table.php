@@ -20,9 +20,9 @@ final class AddPublishDateToArticlesTable extends AbstractMigration
     public function change()
     {
         $table = $this->table('articles');
-        $table->addColumn('publish_date', 'timestamp', [
-            'null' => true,      // Permite que el valor sea nulo
-            'after' => 'body'    // Lo coloca después de la columna 'body'
+        $table->addColumn('publish_date', 'date', [
+            'null' => true,
+            'after' => 'body'
         ])
         ->update();
     }

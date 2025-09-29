@@ -32,11 +32,11 @@ class Article extends Model
         'description',
         'body',
         'user_id',
-        'publish_date', // <-- AÑADIR ESTO
+        'publish_date',
     ];
 
     protected $casts = [
-        'publish_date' => 'datetime', // <-- AÑADIR ESTO
+        'publish_date' => 'date',
     ];    
 
     public function setSlugAttribute($value)
