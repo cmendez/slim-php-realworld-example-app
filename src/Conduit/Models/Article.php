@@ -33,6 +33,8 @@ class Article extends Model
         'body',
         'user_id',
         'publish_date',
+        'reading_time',
+
     ];
 
     protected $casts = [

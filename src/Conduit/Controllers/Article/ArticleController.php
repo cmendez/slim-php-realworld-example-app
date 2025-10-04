@@ -142,7 +142,7 @@ class ArticleController
             'description' => v::notEmpty(),
             'body'        => v::notEmpty(),
             // Mantenemos la validación para asegurarnos de que el formato es correcto
-            'publishDate' => v::optional(v::date()), 
+            'publishDate' => v::optional(v::date()),
         ]);
 
         if ($this->validator->failed()) {
@@ -158,6 +158,7 @@ class ArticleController
         
         $article->slug = str_slug($article->title);
         $article->user_id = $requestUser->id;
+        $article->reading_time=ceil(str_word_count(strip_tags($article->body))/200);
 
         // Verificamos si 'publishDate' existe y creamos un objeto Carbon explícitamente.
         if (!empty($data['publishDate'])) {
