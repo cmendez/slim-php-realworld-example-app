@@ -155,7 +155,7 @@ class ArticleController
             'description' => $data['description'],
             'body' => $data['body'],
         ]);
-        
+
         $article->slug = str_slug($article->title);
         $article->user_id = $requestUser->id;
 
@@ -163,6 +163,10 @@ class ArticleController
         if (!empty($data['publishDate'])) {
             $article->publish_date = Carbon::parse($data['publishDate']);
         }
+
+        // Calcular tiempo de lectura
+        $wordCount = str_word_count($article->body);
+        $article->reading_time = ceil($wordCount / 200);
 
         $article->save();
 
@@ -229,6 +233,9 @@ class ArticleController
 
         if (isset($params['body'])) {
             $article->body = $params['body'];
+            // Recalcular tiempo de lectura
+            $wordCount = str_word_count($article->body);
+            $article->reading_time = ceil($wordCount / 200);
         }
 
         // --- 3. MANEJAR LA FECHA DE PUBLICACIÓN CON CARBON ---

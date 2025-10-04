@@ -12,7 +12,7 @@ class BaseSeeder extends \Phinx\Seed\AbstractSeed
     /** @var  \Faker\Generator */
     protected $faker;
 
-    protected function init()
+    public function init()
     {
         $this->faker = Faker\Factory::create();
         $this->factory = new \Illuminate\Database\Eloquent\Factory($this->faker);
