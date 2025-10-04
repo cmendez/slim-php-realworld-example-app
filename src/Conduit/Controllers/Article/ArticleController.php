@@ -137,6 +137,11 @@ class ArticleController
 
         $data = $request->getParam('article');
 
+        // Contar palabras del body de un article
+        $conteo_de_palabras = str_word_count(strip_tags($data['body']));
+        // Calcular el tiempo de lectura
+        $readingTime = ceil($conteo_de_palabras / 200);
+
         $this->validator->validateArray($data, [
             'title'       => v::notEmpty(),
             'description' => v::notEmpty(),
@@ -154,6 +159,8 @@ class ArticleController
             'title' => $data['title'],
             'description' => $data['description'],
             'body' => $data['body'],
+            // Guardar el valor en la nueva columna
+            'reading_time' => $readingTime, 
         ]);
         
         $article->slug = str_slug($article->title);
@@ -229,6 +236,12 @@ class ArticleController
 
         if (isset($params['body'])) {
             $article->body = $params['body'];
+
+            // Si de actualiza el body se recalcula el reading time
+            $conteo_de_palabras = str_word_count(strip_tags($params['body']));
+            // Calcular el tiempo de lectura
+            $article -> reading_time = ceil($conteo_de_palabras / 200);
+
         }
 
         // --- 3. MANEJAR LA FECHA DE PUBLICACIÓN CON CARBON ---
