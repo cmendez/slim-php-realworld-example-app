@@ -149,11 +149,16 @@ class ArticleController
             return $response->withJson(['errors' => $this->validator->getErrors()], 422);
         }
         
+        // Calculate reading time from body
+        $wordCount = str_word_count(strip_tags($data['body']));
+        $readingTime = (int) ceil($wordCount / 200);
+        
         // Aquí usamos el constructor solo para los campos que no dan problemas
         $article = new Article([
             'title' => $data['title'],
             'description' => $data['description'],
             'body' => $data['body'],
+            'reading_time' => $readingTime,
         ]);
         
         $article->slug = str_slug($article->title);
@@ -229,6 +234,9 @@ class ArticleController
 
         if (isset($params['body'])) {
             $article->body = $params['body'];
+            // Recalculate reading time when body changes
+            $wordCount = str_word_count(strip_tags($params['body']));
+            $article->reading_time = (int) ceil($wordCount / 200);
         }
 
         // --- 3. MANEJAR LA FECHA DE PUBLICACIÓN CON CARBON ---
