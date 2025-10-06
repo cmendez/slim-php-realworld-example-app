@@ -164,6 +164,12 @@ class ArticleController
             $article->publish_date = Carbon::parse($data['publishDate']);
         }
 
+        // Calcular tiempo de lectura (palabras / 200, redondeo hacia arriba)
+        $wordCount = str_word_count(strip_tags($article->body));
+        $article->reading_time = (int) ceil($wordCount / 200);
+
+        $article->save();
+
         $article->save();
 
         $tagsId = [];
@@ -229,6 +235,10 @@ class ArticleController
 
         if (isset($params['body'])) {
             $article->body = $params['body'];
+
+            // Recalcular tiempo de lectura solo si se actualiza el cuerpo
+            $wordCount = str_word_count(strip_tags($params['body']));
+            $article->reading_time = (int) ceil($wordCount / 200);
         }
 
         // --- 3. MANEJAR LA FECHA DE PUBLICACIÓN CON CARBON ---
