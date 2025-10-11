@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
 
-final class AddPopularityScoreToCommentsTable extends AbstractMigration
+final class AddPopularityScoreToArticlesTable extends AbstractMigration
 {
     /**
      * Change Method.
