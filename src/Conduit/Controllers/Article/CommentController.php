@@ -71,35 +71,49 @@ class CommentController
      *
      * @return \Slim\Http\Response
      */
-    public function store(Request $request, Response $response, array $args)
-    {
-        $article = Article::query()->where('slug', $args['slug'])->firstOrFail();
-        $requestUser = $this->auth->requestUser($request);
+   public function store(Request $request, Response $response, array $args)
+{
+    $article = Article::query()->where('slug', $args['slug'])->firstOrFail();
+    $requestUser = $this->auth->requestUser($request);
 
-        if (is_null($requestUser)) {
-            return $response->withJson([], 401);
-        }
+    if (is_null($requestUser)) {
+        return $response->withJson([], 401);
+    }
 
-        $this->validator->validateArray($data = $request->getParam('comment'),
-            [
-                'body' => v::notEmpty(),
-            ]);
-
-        if ($this->validator->failed()) {
-            return $response->withJson(['errors' => $this->validator->getErrors()], 422);
-        }
-
-        $comment = Comment::create([
-            'body'       => $data['body'],
-            'user_id'    => $requestUser->id,
-            'article_id' => $article->id,
+    $this->validator->validateArray($data = $request->getParam('comment'),
+        [
+            'body' => v::notEmpty(),
         ]);
 
-        $data = $this->fractal->createData(new Item($comment, new CommentTransformer()))->toArray();
-
-        return $response->withJson(['comment' => $data]);
-
+    if ($this->validator->failed()) {
+        return $response->withJson(['errors' => $this->validator->getErrors()], 422);
     }
+
+    $ListGood = ['increíble', 'excelente', 'bueno', 'util', 'genial', 'fantástico', 'maravilloso', 'perfecto', 'impresionante', 'claro', 'preciso', 'valioso', 'interesante', 'recomendado', 'gracias', 'felicitaciones', 'mejora', 'acierto', 'fácil', 'correcto'];
+    $ListBad = ['malo', 'pesimo', 'inutil', 'error', 'odio', 'horrible', 'terrible', 'desastre', 'decepcionante', 'incorrecto', 'falso', 'confuso', 'equivocado', 'pobre', 'mediocre', 'basura', 'frustrante', 'problema', 'dificil', 'lento'];
+    $bodyLower = strtolower($data['body']);
+    $words = preg_split('/\s+/', $bodyLower);
+    $commentScore = 0;
+    foreach ($words as $word) {
+        if (in_array($word, $ListGood)) {
+            $commentScore += 2;
+        }
+        if (in_array($word, $ListBad)) {
+            $commentScore -= 2;
+        }
+    }
+    $commentScore += 1;
+    $comment = Comment::create([
+        'body'       => $data['body'],
+        'user_id'    => $requestUser->id,
+        'article_id' => $article->id,
+        'score'      => $commentScore,
+    ]);
+    $article->popularity_score = ($article->popularity_score ?? 0) + $commentScore;
+    $article->save();   
+    $data = $this->fractal->createData(new Item($comment, new CommentTransformer()))->toArray();
+    return $response->withJson(['comment' => $data]);
+}
 
     /**
      * Delete A Comment Endpoint
@@ -121,6 +135,11 @@ class CommentController
 
         if ($requestUser->id != $comment->user_id) {
             return $response->withJson(['message' => 'Forbidden'], 403);
+        }
+        $article = $comment->article;
+        if ($article) {
+            $article->popularity_score = ($article->popularity_score ?? 0) - ($comment->score ?? 0);
+            $article->save();
         }
 
         $comment->delete();

@@ -50,7 +50,8 @@ class FavoriteController
         }
 
         $requestUser->favoriteArticles()->syncWithoutDetaching($article->id);
-
+         $article->popularity_score = ($article->popularity_score ?? 0) + 2;
+         $article->save();
         $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
 
         return $response->withJson(['article' => $data]);
@@ -74,7 +75,8 @@ class FavoriteController
         if (is_null($requestUser)) {
             return $response->withJson([], 401);
         }
-
+        $article->popularity_score = ($article->popularity_score ?? 0) - 2;
+        $article->save();
         $requestUser->favoriteArticles()->detach($article->id);
 
         $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();

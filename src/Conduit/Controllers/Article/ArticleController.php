@@ -180,6 +180,17 @@ class ArticleController
         return $response->withJson(['article' => $data]);
     }
 
+    public function popular(Request $request, Response $response, array $args)
+    {
+    $builder = Article::query()
+        ->orderByDesc('popularity_score')
+        ->orderBy('title', 'asc')
+        ->select(['id', 'title', 'slug','popularity_score'])
+        ->limit(20);
+    $articles = $builder->get();
+    return $response->withJson(['articles' => $articles]);
+    }
+
     /**
      * Update Article Endpoint
      *
