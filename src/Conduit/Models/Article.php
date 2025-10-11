@@ -33,12 +33,14 @@ class Article extends Model
         'body',
         'user_id',
         'publish_date',
-        'reading_time'
+        'reading_time',
+        'popularity_score'
     ];
 
     protected $casts = [
         'publish_date' => 'date',
-        'reading_time' => 'integer'
+        'reading_time' => 'integer',
+        'popularity_score' => 'integer'
     ];    
 
     public function setSlugAttribute($value)
