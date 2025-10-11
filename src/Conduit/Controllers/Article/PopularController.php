@@ -4,7 +4,6 @@ namespace Conduit\Controllers\Article;
 
 use Conduit\Models\Article;
 use Conduit\Transformers\ArticleTransformer;
-use League\Fractal\Pagination\IlluminatePaginatorAdapter;
 use League\Fractal\Resource\Collection;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -44,26 +43,24 @@ class PopularController
         $limit = $request->getParam('limit', 20);
         $offset = $request->getParam('offset', 0);
 
-        // Calculate page number for paginator
-        $page = floor($offset / $limit) + 1;
-
         // Query articles ordered by popularity_score DESC, then by title ASC
-        $articlesQuery = Article::query()
+        $articles = Article::query()
             ->orderBy('popularity_score', 'desc')
-            ->orderBy('title', 'asc');
+            ->orderBy('title', 'asc')
+            ->skip($offset)
+            ->take($limit)
+            ->get();
 
-        // Paginate results
-        $paginator = $articlesQuery->paginate($limit, ['*'], 'page', $page);
+        // Get total count for articlesCount
+        $totalCount = Article::query()->count();
 
         // Transform data
-        $articles = new Collection($paginator->items(), new ArticleTransformer($requestUserId));
-        $articles->setPaginator(new IlluminatePaginatorAdapter($paginator));
-
-        $data = $this->fractal->createData($articles)->toArray();
+        $articlesCollection = new Collection($articles, new ArticleTransformer($requestUserId));
+        $data = $this->fractal->createData($articlesCollection)->toArray();
 
         return $response->withJson([
             'articles' => $data['data'],
-            'articlesCount' => $paginator->total(),
+            'articlesCount' => $totalCount,
         ]);
     }
 }
