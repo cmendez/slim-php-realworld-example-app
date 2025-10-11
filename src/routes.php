@@ -58,6 +58,9 @@ $app->group('/api',
         $this->post('/articles', ArticleController::class . ':store')->add($jwtMiddleware)->setName('article.store');
         $this->get('/articles', ArticleController::class . ':index')->add($optionalAuth)->setName('article.index');
 
+        // Popular Articles Routes
+        $this->get('/articles/popular', ArticleController::class . ':popular')->add($optionalAuth)->setName('article.popular');
+
         // Comments
         $this->get('/articles/{slug}/comments',
             CommentController::class . ':index')

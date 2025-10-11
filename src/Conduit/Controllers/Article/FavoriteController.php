@@ -49,7 +49,16 @@ class FavoriteController
             return $response->withJson([], 401);
         }
 
+        $wasFavorited = $requestUser->favoriteArticles()->where('article_id', $article->id)->exists();
+
         $requestUser->favoriteArticles()->syncWithoutDetaching($article->id);
+
+        if (!$wasFavorited) {
+            // +2 puntos al añadir favorito
+            if (method_exists($article, 'updatePopularity')) {
+                $article->updatePopularity(+2);
+            }
+        }
 
         $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
 

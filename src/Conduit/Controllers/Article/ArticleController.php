@@ -259,6 +259,25 @@ class ArticleController
         return $response->withJson(['article' => $data]);
     }
 
+    public function popular(Request $request, Response $response, array $args)
+    {
+        $requestUserId = optional($this->auth->requestUser($request))->id;
+
+        $articles = Article::query()
+            ->with(['tags', 'user'])
+            ->orderBy('popularity_score', 'desc') // primero por popularidad
+            ->orderBy('title', 'asc')            // desempate por título
+            ->get();
+
+        $data = $this->fractal->createData(
+            new Collection($articles, new ArticleTransformer($requestUserId))
+        )->toArray();
+
+        return $response->withJson([
+            'articles' => $data['data'],
+        ],200);
+    }
+
     /**
      * Delete Article Endpoint
      *
@@ -285,5 +304,5 @@ class ArticleController
 
         return $response->withJson([], 200);
     }
-
+    
 }

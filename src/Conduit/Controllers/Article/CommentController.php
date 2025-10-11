@@ -73,6 +73,10 @@ class CommentController
      */
     public function store(Request $request, Response $response, array $args)
     {
+        // Definir las palabras positivas y negativas
+        $negative_words=['malo','pesimo','inutil','error','odio','horrible','terrible','desastre','decepcionate','incorrecto','falso','confuso','equivocado','pobre','mediocre','basura','frustrante','problema','dificil','lento'];
+        $positive_words=['increible','excelente','bueno','util','genial','fantastico','maravilloso','perfecto','impresionante','claro','preciso','valioso','interesante','recomendado','gracias','felicitaciones','mejora','acierto','facil','correcto'];
+        
         $article = Article::query()->where('slug', $args['slug'])->firstOrFail();
         $requestUser = $this->auth->requestUser($request);
 
@@ -89,10 +93,37 @@ class CommentController
             return $response->withJson(['errors' => $this->validator->getErrors()], 422);
         }
 
+        // Obtener el body del comentario
+        $body = $data['body'];
+        //Normalizar el contenido del comentario, quitar tildes y mayusculas
+        $body = strtolower($body);
+        $caracteres_con_tilde = ['á', 'é', 'í', 'ó', 'ú'];
+        $caracteres_sin_tilde = ['a', 'e', 'i', 'o', 'u'];
+        $body = str_replace($caracteres_con_tilde, $caracteres_sin_tilde, $body);
+        //sumar, restar puntaje si encuentra las palabras en las listas
+        $score = 1; // puntaje base solo por crear el comentario
+
+        // Dividir el cuerpo del comentario en palabras
+        $words = explode(' ', $body);
+
+        // Recorrer todas las palabras del comentario
+        foreach ($words as $word) {
+            if (in_array($word, $positive_words)) {
+                $score += 2;
+            }
+            if (in_array($word, $negative_words)) {
+                $score -= 2;
+            }
+        }
+        // Actualizar el popularity_score del artículo
+        $article->popularity_score = $article->popularity_score + $score;
+        $article->save();
+        //---
         $comment = Comment::create([
-            'body'       => $data['body'],
+            'body'       => $body,
             'user_id'    => $requestUser->id,
             'article_id' => $article->id,
+            'score'      => $score,
         ]);
 
         $data = $this->fractal->createData(new Item($comment, new CommentTransformer()))->toArray();
@@ -123,6 +154,12 @@ class CommentController
             return $response->withJson(['message' => 'Forbidden'], 403);
         }
 
+        // Antes de borrar restablecer el puntaje del artículo
+        // Recalcular el score
+        $article = $comment->article;
+        $article->popularity_score = $article->popularity_score - $comment->score;
+        $article->save();
+        
         $comment->delete();
 
         return $response->withJson([], 200);
