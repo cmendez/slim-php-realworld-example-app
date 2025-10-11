@@ -3,6 +3,7 @@
 use Conduit\Controllers\Article\ArticleController;
 use Conduit\Controllers\Article\CommentController;
 use Conduit\Controllers\Article\FavoriteController;
+use Conduit\Controllers\Article\PopularController;
 use Conduit\Controllers\Auth\LoginController;
 use Conduit\Controllers\Auth\RegisterController;
 use Conduit\Controllers\User\ProfileController;
@@ -49,6 +50,7 @@ $app->group('/api',
 
 
         // Articles Routes
+        $this->get('/articles/popular', PopularController::class . ':index')->add($optionalAuth)->setName('article.popular');
         $this->get('/articles/feed', ArticleController::class . ':index')->add($optionalAuth)->setName('article.index');
         $this->get('/articles/{slug}', ArticleController::class . ':show')->add($optionalAuth)->setName('article.show');
         $this->put('/articles/{slug}',

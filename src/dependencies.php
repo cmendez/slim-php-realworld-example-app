@@ -63,3 +63,12 @@ $container['fractal'] = function ($c) {
 
     return $manager;
 };
+// Sentiment Analysis Service
+$container['sentimentAnalysis'] = function ($c) {
+    return new \Conduit\Services\SentimentAnalysisService();
+};
+
+// Popularity Service
+$container['popularityService'] = function ($c) {
+    return new \Conduit\Services\PopularityService($c->get('sentimentAnalysis'));
+};

@@ -4,6 +4,7 @@ namespace Conduit\Controllers\Article;
 
 use Conduit\Models\Article;
 use Conduit\Models\Comment;
+use Conduit\Services\PopularityService;
 use Conduit\Transformers\ArticleTransformer;
 use Conduit\Transformers\CommentTransformer;
 use Interop\Container\ContainerInterface;
@@ -24,6 +25,8 @@ class CommentController
     protected $auth;
     /** @var \League\Fractal\Manager */
     protected $fractal;
+    /** @var \Conduit\Services\PopularityService */
+    protected $popularityService;
 
     /**
      * UserController constructor.
@@ -38,6 +41,7 @@ class CommentController
         $this->fractal = $container->get('fractal');
         $this->validator = $container->get('validator');
         $this->db = $container->get('db');
+        $this->popularityService = $container->get('popularityService');
     }
 
     /**
@@ -95,6 +99,9 @@ class CommentController
             'article_id' => $article->id,
         ]);
 
+        // Update article popularity based on comment sentiment
+        $this->popularityService->addCommentScore($comment);
+
         $data = $this->fractal->createData(new Item($comment, new CommentTransformer()))->toArray();
 
         return $response->withJson(['comment' => $data]);
@@ -112,7 +119,7 @@ class CommentController
      */
     public function destroy(Request $request, Response $response, array $args)
     {
-        $comment = Comment::query()->findOrFail($args['id']);
+        $comment = Comment::query()->with('article')->findOrFail($args['id']);
         $requestUser = $this->auth->requestUser($request);
 
         if (is_null($requestUser)) {
@@ -122,6 +129,9 @@ class CommentController
         if ($requestUser->id != $comment->user_id) {
             return $response->withJson(['message' => 'Forbidden'], 403);
         }
+
+        // Remove comment sentiment score from article popularity before deleting
+        $this->popularityService->removeCommentScore($comment);
 
         $comment->delete();
 

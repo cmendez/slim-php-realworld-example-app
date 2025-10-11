@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property integer                 id
  * @property string                  body
+ * @property integer                 sentiment_score
  * @property integer                 article_id
  * @property integer                 user_id
  * @property \Conduit\Models\User    user
@@ -27,6 +28,16 @@ class Comment extends Model
         'body',
         'user_id',
         'article_id',
+        'sentiment_score',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'sentiment_score' => 'integer',
     ];
 
     /********************

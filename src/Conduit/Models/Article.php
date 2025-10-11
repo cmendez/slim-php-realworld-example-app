@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string                                   description
  * @property string                                   body
  * @property integer                                  reading_time
+ * @property integer                                  popularity_score
  * @property integer                                  user_id
  * @property \Conduit\Models\User                     user
  * @property \Illuminate\Database\Eloquent\Collection comments
@@ -35,11 +36,13 @@ class Article extends Model
         'user_id',
         'publish_date',
         'reading_time',
+        'popularity_score',
     ];
 
     protected $casts = [
         'publish_date' => 'date',
         'reading_time' => 'integer',
+        'popularity_score' => 'integer',
     ];    
 
     public function setSlugAttribute($value)
