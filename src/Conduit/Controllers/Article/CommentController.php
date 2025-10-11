@@ -91,8 +91,11 @@ class CommentController
 
     $ListGood = ['increíble', 'excelente', 'bueno', 'util', 'genial', 'fantástico', 'maravilloso', 'perfecto', 'impresionante', 'claro', 'preciso', 'valioso', 'interesante', 'recomendado', 'gracias', 'felicitaciones', 'mejora', 'acierto', 'fácil', 'correcto'];
     $ListBad = ['malo', 'pesimo', 'inutil', 'error', 'odio', 'horrible', 'terrible', 'desastre', 'decepcionante', 'incorrecto', 'falso', 'confuso', 'equivocado', 'pobre', 'mediocre', 'basura', 'frustrante', 'problema', 'dificil', 'lento'];
-    $bodyLower = strtolower($data['body']);
-    $words = preg_split('/\s+/', $bodyLower);
+    $bodyNormalized = strtolower($data['body']);
+    $bodyNormalized = strtr($bodyNormalized, [
+    'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+    ]);
+    $words = preg_split('/\s+/', $bodyNormalized);
     $commentScore = 0;
     foreach ($words as $word) {
         if (in_array($word, $ListGood)) {
