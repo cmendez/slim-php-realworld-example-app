@@ -89,16 +89,23 @@ class CommentController
             return $response->withJson(['errors' => $this->validator->getErrors()], 422);
         }
 
+        // Analizar el sentimiento del comentario
+        $sentiment = analyzeSentiment($data['body']);
+
         $comment = Comment::create([
-            'body'       => $data['body'],
-            'user_id'    => $requestUser->id,
-            'article_id' => $article->id,
+            'body'            => $data['body'],
+            'user_id'         => $requestUser->id,
+            'article_id'      => $article->id,
+            'sentiment_score' => $sentiment['score'],    
+            'sentiment_type'  => $sentiment['type'],     
         ]);
+
+        // Sumar el sentiment_score al popularity_score del artículo
+        $article->increment('popularity_score', $sentiment['score']);
 
         $data = $this->fractal->createData(new Item($comment, new CommentTransformer()))->toArray();
 
         return $response->withJson(['comment' => $data]);
-
     }
 
     /**
@@ -112,16 +119,22 @@ class CommentController
      */
     public function destroy(Request $request, Response $response, array $args)
     {
-        $comment = Comment::query()->findOrFail($args['id']);
+        $comment = Comment::query()->where('id', $args['id'])->firstOrFail();
         $requestUser = $this->auth->requestUser($request);
 
         if (is_null($requestUser)) {
             return $response->withJson([], 401);
         }
 
-        if ($requestUser->id != $comment->user_id) {
-            return $response->withJson(['message' => 'Forbidden'], 403);
+        // Verificar que el usuario sea dueño del comentario
+        if ($comment->user_id !== $requestUser->id) {
+            return $response->withJson(['error' => 'No autorizado'], 403);
         }
+
+        $article = $comment->article;
+        
+        // Restar el sentiment_score del popularity_score del artículo
+        $article->decrement('popularity_score', $comment->sentiment_score);
 
         $comment->delete();
 

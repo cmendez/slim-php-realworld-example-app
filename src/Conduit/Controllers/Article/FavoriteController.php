@@ -16,7 +16,7 @@ class FavoriteController
     protected $auth;
     /** @var \League\Fractal\Manager */
     protected $fractal;
-
+ 
     /**
      * UserController constructor.
      *
@@ -28,6 +28,19 @@ class FavoriteController
     {
         $this->auth = $container->get('auth');
         $this->fractal = $container->get('fractal');
+    }
+
+    public function popular(Request $request, Response $response, array $args)
+    {
+        // Obtener todos los artículos con su popularity_score
+        $articles = Article::query()
+            ->select('id', 'title', 'slug', 'popularity_score')
+            ->orderBy('popularity_score', 'desc')
+            ->get();
+
+        return $response->withJson([
+            'articles' => $articles
+        ]);
     }
 
     /**
@@ -50,6 +63,9 @@ class FavoriteController
         }
 
         $requestUser->favoriteArticles()->syncWithoutDetaching($article->id);
+
+        // Incrementar el score de popularidad en 2 puntos
+        $article->increment('popularity_score', 2);
 
         $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
 
@@ -76,6 +92,9 @@ class FavoriteController
         }
 
         $requestUser->favoriteArticles()->detach($article->id);
+
+        // Decrementar el score de popularidad en 2 puntos
+        $article->decrement('popularity_score', 2);
 
         $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
 

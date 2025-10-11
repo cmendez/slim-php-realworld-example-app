@@ -49,36 +49,40 @@ $app->group('/api',
 
 
         // Articles Routes
-        $this->get('/articles/feed', ArticleController::class . ':index')->add($optionalAuth)->setName('article.index');
-        $this->get('/articles/{slug}', ArticleController::class . ':show')->add($optionalAuth)->setName('article.show');
-        $this->put('/articles/{slug}',
-            ArticleController::class . ':update')->add($jwtMiddleware)->setName('article.update');
-        $this->delete('/articles/{slug}',
-            ArticleController::class . ':destroy')->add($jwtMiddleware)->setName('article.destroy');
-        $this->post('/articles', ArticleController::class . ':store')->add($jwtMiddleware)->setName('article.store');
+        // Define static routes before variable routes so FastRoute doesn't mark them as shadowed
+        $this->get('/articles/feed', ArticleController::class . ':index')->add($optionalAuth)->setName('article.feed');
+
+        // Implementación de popularidad
+        $this->get('/articles/popular',
+            FavoriteController::class . ':popular')
+            ->add($optionalAuth)
+            ->setName('articles.popular');
+
+        // List and create (static) routes
         $this->get('/articles', ArticleController::class . ':index')->add($optionalAuth)->setName('article.index');
+        $this->post('/articles', ArticleController::class . ':store')->add($jwtMiddleware)->setName('article.store');
+
+        // Variable article routes (slug) and related nested routes
+        $this->get('/articles/{slug}', ArticleController::class . ':show')->add($optionalAuth)->setName('article.show');
+        $this->put('/articles/{slug}', ArticleController::class . ':update')->add($jwtMiddleware)->setName('article.update');
+        $this->delete('/articles/{slug}', ArticleController::class . ':destroy')->add($jwtMiddleware)->setName('article.destroy');
 
         // Comments
-        $this->get('/articles/{slug}/comments',
-            CommentController::class . ':index')
+        $this->get('/articles/{slug}/comments', CommentController::class . ':index')
             ->add($optionalAuth)
             ->setName('comment.index');
-        $this->post('/articles/{slug}/comments',
-            CommentController::class . ':store')
+        $this->post('/articles/{slug}/comments', CommentController::class . ':store')
             ->add($jwtMiddleware)
             ->setName('comment.store');
-        $this->delete('/articles/{slug}/comments/{id}',
-            CommentController::class . ':destroy')
+        $this->delete('/articles/{slug}/comments/{id}', CommentController::class . ':destroy')
             ->add($jwtMiddleware)
             ->setName('comment.destroy');
 
         // Favorite Article Routes
-        $this->post('/articles/{slug}/favorite',
-            FavoriteController::class . ':store')
+        $this->post('/articles/{slug}/favorite', FavoriteController::class . ':store')
             ->add($jwtMiddleware)
             ->setName('favorite.store');
-        $this->delete('/articles/{slug}/favorite',
-            FavoriteController::class . ':destroy')
+        $this->delete('/articles/{slug}/favorite', FavoriteController::class . ':destroy')
             ->add($jwtMiddleware)
             ->setName('favorite.destroy');
 

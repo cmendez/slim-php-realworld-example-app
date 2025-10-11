@@ -42,6 +42,9 @@ class CommentTransformer extends TransformerAbstract
             'createdAt' => $comment->created_at->toIso8601String(),
             'updatedAt' => isset($user->update_at) ? $comment->update_at->toIso8601String() : $comment->update_at,
             'body'      => $comment->body,
+            'sentiment_score' => $comment->sentiment_score,
+            'sentiment_type'  => $comment->sentiment_type,
+            
         ];
     }
 

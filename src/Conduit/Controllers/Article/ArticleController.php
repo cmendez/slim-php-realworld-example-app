@@ -156,6 +156,9 @@ class ArticleController
             'body' => $data['body'],
         ]);
         
+        // Calculamos el tiempo de lectura y lo asignamos
+        $article->reading_time = ceil(str_word_count($data['body']) / 200);
+
         $article->slug = str_slug($article->title);
         $article->user_id = $requestUser->id;
 
@@ -229,6 +232,7 @@ class ArticleController
 
         if (isset($params['body'])) {
             $article->body = $params['body'];
+            $article->reading_time = ceil(str_word_count($params['body']) / 200);
         }
 
         // --- 3. MANEJAR LA FECHA DE PUBLICACIÓN CON CARBON ---
