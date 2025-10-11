@@ -49,6 +49,8 @@ $app->group('/api',
 
 
         // Articles Routes
+        $this->get('/articles/popular', ArticleController::class . ':popular')->add($optionalAuth)->setName('article.popular');
+
         $this->get('/articles/feed', ArticleController::class . ':index')->add($optionalAuth)->setName('article.index');
         $this->get('/articles/{slug}', ArticleController::class . ':show')->add($optionalAuth)->setName('article.show');
         $this->put('/articles/{slug}',

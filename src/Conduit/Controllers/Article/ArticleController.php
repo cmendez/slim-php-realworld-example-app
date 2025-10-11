@@ -162,7 +162,8 @@ class ArticleController
         // Verificamos si 'publishDate' existe y creamos un objeto Carbon explícitamente.
         if (!empty($data['publishDate'])) {
             $article->publish_date = Carbon::parse($data['publishDate']);
-        }
+        }   
+        $article->reading_time = $this->calcReadingTime($data['body'] ?? null);
 
         $article->save();
 
@@ -229,8 +230,8 @@ class ArticleController
 
         if (isset($params['body'])) {
             $article->body = $params['body'];
+            $article->reading_time = $this->calcReadingTime($params['body']);
         }
-
         // --- 3. MANEJAR LA FECHA DE PUBLICACIÓN CON CARBON ---
         if (isset($params['publishDate'])) {
             // Si la fecha es un string vacío o nulo, la establecemos como null en la BD.
@@ -244,6 +245,30 @@ class ArticleController
         $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
 
         return $response->withJson(['article' => $data]);
+    }
+
+    public function popular(Request $request, Response $response, array $args)
+    {
+        $requestUserId = optional($this->auth->requestUser($request))->id;
+
+        $limit  = (int) ($request->getParam('limit') ?? 20);
+        $offset = (int) ($request->getParam('offset') ?? 0);
+
+        $builder = Article::query()
+            ->with(['tags', 'user'])
+            ->orderBy('popularity_score', 'desc')
+            ->orderBy('title', 'asc')
+            ->limit($limit)
+            ->offset($offset);
+
+        $articles      = $builder->get();
+        $articlesCount = Article::query()->count(); // o count específico si lo prefieres
+
+        $data = $this->fractal->createData(
+            new Collection($articles, new ArticleTransformer($requestUserId))
+        )->toArray();
+
+        return $response->withJson(['articles' => $data['data'], 'articlesCount' => $articlesCount]);
     }
 
     /**
@@ -272,5 +297,13 @@ class ArticleController
 
         return $response->withJson([], 200);
     }
+
+    private function calcReadingTime(?string $body): int
+    {
+        if (!$body) return 1;
+        $words = str_word_count(strip_tags($body));
+        return max(1, (int) ceil($words / 200));
+    }
+
 
 }

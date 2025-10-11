@@ -35,18 +35,25 @@ class ArticleTransformer extends TransformerAbstract
     public function transform(Article $article)
     {
         return [
-            "slug"           => $article->slug,
-            "title"          => $article->title,
-            "description"    => $article->description,
-            "body"           => $article->body,
-            "tagList"        => optional($article->tags()->get(['title']))->pluck('title'),
-            'createdAt'      => $article->created_at->toIso8601String(),
-            'updatedAt'      => isset($user->update_at) ? $article->update_at->toIso8601String() : $article->update_at,
-            "favorited"      => $article->isFavoritedByUser($this->requestUserId),
-            "favoritesCount" => $article->favorites()->count(),
+            'slug'           => $article->slug,
+            'title'          => $article->title,
+            'description'    => $article->description,
+            'body'           => $article->body,
+            'tagList'        => optional($article->tags()->get(['title']))->pluck('title')->toArray(),
+
+            'createdAt'      => optional($article->created_at)->toIso8601String(),
+            'updatedAt'      => optional($article->updated_at)->toIso8601String(),
+
+            'favorited'      => $article->isFavoritedByUser($this->requestUserId),
+            'favoritesCount' => $article->favorites()->count(),
+
             'publishDate'    => optional($article->publish_date)->toIso8601String(),
+
+            'reading_time'   => (int) $article->reading_time,
+            'popularity_score' => (int) $article->popularity_score,
         ];
     }
+
 
 
     /**

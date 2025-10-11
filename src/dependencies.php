@@ -26,6 +26,10 @@ $container['renderer'] = function ($c) {
     return new Slim\Views\PhpRenderer($settings['template_path']);
 };
 
+$container['popularity'] = function($c) {
+    return new \Conduit\Services\Popularity\PopularityService();
+};
+
 // monolog
 $container['logger'] = function ($c) {
     $settings = $c->get('settings')['logger'];
