@@ -45,7 +45,8 @@ class ArticleTransformer extends TransformerAbstract
             "favorited"      => $article->isFavoritedByUser($this->requestUserId),
             "favoritesCount" => $article->favorites()->count(),
             'publishDate'    => optional($article->publish_date)->toIso8601String(),
-            'reading_time'   => (int) $article->reading_time
+            'reading_time'   => (int) $article->reading_time,
+            'popularity_score'=> (int) ($article->popularity_score ?? 0)
         ];
     }
 

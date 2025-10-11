@@ -50,6 +50,10 @@ $app->group('/api',
 
         // Articles Routes
         $this->get('/articles/feed', ArticleController::class . ':index')->add($optionalAuth)->setName('article.index');
+        // ✅ Popular DEBE ir antes de {slug}
+        $this->get('/articles/popular', ArticleController::class . ':popular')
+            ->add($optionalAuth)->setName('article.popular');
+        
         $this->get('/articles/{slug}', ArticleController::class . ':show')->add($optionalAuth)->setName('article.show');
         $this->put('/articles/{slug}',
             ArticleController::class . ':update')->add($jwtMiddleware)->setName('article.update');

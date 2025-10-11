@@ -283,4 +283,38 @@ class ArticleController
         return $response->withJson([], 200);
     }
 
+    public function popular(Request $request, Response $response, array $args = [])
+    {
+        // Parámetros opcionales de paginación
+        $params = $request->getQueryParams();
+        $limit  = min(max((int)($params['limit'] ?? 20), 1), 100);
+        $offset = max((int)($params['offset'] ?? 0), 0);
+
+        // Consulta ordenada por popularidad
+        $query = Article::query()
+            ->with(['user', 'tags'])
+            ->orderByDesc('popularity_score')  // principal
+            ->orderBy('title', 'asc');         // desempate simple
+
+        // Total antes de paginar
+        $total    = (clone $query)->count();
+        $articles = $query->skip($offset)->take($limit)->get();
+
+        // Usuario actual (opcional, para marcar favorited)
+        $viewerId = optional($this->auth->requestUser($request))->id;
+
+        // Transformar artículos (ya incluye popularity_score)
+        $data = $this->fractal->createData(
+            new Collection(
+                $articles,
+                new ArticleTransformer($viewerId)
+            )
+        )->toArray();
+
+        return $response->withJson([
+            'articles'      => $data['data'] ?? $data,
+            'articlesCount' => $total,
+        ], 200);
+    }
+
 }
