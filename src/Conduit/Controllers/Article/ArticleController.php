@@ -53,8 +53,14 @@ class ArticleController
         // TODO Extract the logic of filtering articles to its own class
 
         $requestUserId = optional($requestUser = $this->auth->requestUser($request))->id;
-        $builder = Article::query()->latest()->with(['tags', 'user'])->limit(20);
+        $builder = Article::query()->with(['tags', 'user'])->limit(20);
 
+        // Check if popular parameter is set to order by favorites count descending
+        if ($request->getParam('popular')) {
+            $builder->withCount('favorites')->orderBy('favorites_count', 'desc');
+        } else {
+            $builder->latest();
+        }
 
         if ($request->getUri()->getPath() == '/api/articles/feed') {
             if (is_null($requestUser)) {

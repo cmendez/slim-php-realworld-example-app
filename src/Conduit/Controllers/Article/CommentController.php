@@ -4,6 +4,7 @@ namespace Conduit\Controllers\Article;
 
 use Conduit\Models\Article;
 use Conduit\Models\Comment;
+use Conduit\Services\CommentPopularityService;
 use Conduit\Transformers\ArticleTransformer;
 use Conduit\Transformers\CommentTransformer;
 use Interop\Container\ContainerInterface;
@@ -53,7 +54,9 @@ class CommentController
     {
         $requestUserId = optional($this->auth->requestUser($request))->id;
 
-        $article = Article::query()->with('comments')->where('slug', $args['slug'])->firstOrFail();
+        $article = Article::query()->with(['comments' => function ($query) {
+            $query->orderBy('popularity', 'desc');
+        }])->where('slug', $args['slug'])->firstOrFail();
 
         $data = $this->fractal->createData(new Collection($article->comments,
             new CommentTransformer($requestUserId)))->toArray();
@@ -89,10 +92,13 @@ class CommentController
             return $response->withJson(['errors' => $this->validator->getErrors()], 422);
         }
 
+        $popularity = CommentPopularityService::calculatePopularity($data['body']);
+
         $comment = Comment::create([
             'body'       => $data['body'],
             'user_id'    => $requestUser->id,
             'article_id' => $article->id,
+            'popularity' => $popularity,
         ]);
 
         $data = $this->fractal->createData(new Item($comment, new CommentTransformer()))->toArray();

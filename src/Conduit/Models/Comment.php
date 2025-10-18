@@ -27,6 +27,7 @@ class Comment extends Model
         'body',
         'user_id',
         'article_id',
+        'popularity',
     ];
 
     /********************

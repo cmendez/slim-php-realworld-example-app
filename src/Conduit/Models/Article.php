@@ -83,6 +83,11 @@ class Article extends Model
         return $this->hasMany(Comment::class);
     }
 
+    public function getPopularityAttribute()
+    {
+        return $this->comments()->sum('popularity');
+    }
+
     /**
      * Check if given user has favorited this article
      *

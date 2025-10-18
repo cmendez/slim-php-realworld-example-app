@@ -41,10 +41,11 @@ class ArticleTransformer extends TransformerAbstract
             "body"           => $article->body,
             "tagList"        => optional($article->tags()->get(['title']))->pluck('title'),
             'createdAt'      => $article->created_at->toIso8601String(),
-            'updatedAt'      => isset($user->update_at) ? $article->update_at->toIso8601String() : $article->update_at,
+            'updatedAt'      => isset($article->update_at) ? $article->update_at->toIso8601String() : $article->update_at,
             "favorited"      => $article->isFavoritedByUser($this->requestUserId),
             "favoritesCount" => $article->favorites()->count(),
             'publishDate'    => optional($article->publish_date)->toIso8601String(),
+            'popularity'     => $article->popularity,
         ];
     }
 
