@@ -89,23 +89,23 @@ class CommentController
             return $response->withJson(['errors' => $this->validator->getErrors()], 422);
         }
 
-        // Analizar el sentimiento del comentario
-        $sentiment = analyzeSentiment($data['body']);
-
         $comment = Comment::create([
-            'body'            => $data['body'],
-            'user_id'         => $requestUser->id,
-            'article_id'      => $article->id,
-            'sentiment_score' => $sentiment['score'],    
-            'sentiment_type'  => $sentiment['type'],     
+            'body'       => $data['body'],
+            'user_id'    => $requestUser->id,
+            'article_id' => $article->id,
         ]);
 
-        // Sumar el sentiment_score al popularity_score del artículo
-        $article->increment('popularity_score', $sentiment['score']);
+        // Calcular y sumar puntaje al artículo
+        $puntaje = $this->calcularPuntajeComentario($comment->body);
+        $article->increment('popularity_score', $puntaje);
 
-        $data = $this->fractal->createData(new Item($comment, new CommentTransformer()))->toArray();
+        // Devolver respuesta
+        $data = $this->fractal->createData(
+            new Item($comment, new CommentTransformer($requestUser->id))
+        )->toArray();
 
         return $response->withJson(['comment' => $data]);
+
     }
 
     /**
@@ -119,26 +119,66 @@ class CommentController
      */
     public function destroy(Request $request, Response $response, array $args)
     {
-        $comment = Comment::query()->where('id', $args['id'])->firstOrFail();
+        $comment = Comment::query()->findOrFail($args['id']);
         $requestUser = $this->auth->requestUser($request);
 
         if (is_null($requestUser)) {
             return $response->withJson([], 401);
         }
 
-        // Verificar que el usuario sea dueño del comentario
-        if ($comment->user_id !== $requestUser->id) {
-            return $response->withJson(['error' => 'No autorizado'], 403);
+        if ($requestUser->id != $comment->user_id) {
+            return $response->withJson(['message' => 'Forbidden'], 403);
         }
 
-        $article = $comment->article;
-        
-        // Restar el sentiment_score del popularity_score del artículo
-        $article->decrement('popularity_score', $comment->sentiment_score);
+        // Obtener el artículo antes de eliminar
+        $article = Article::find($comment->article_id);
+
+        // Calcular y restar puntaje
+        $puntaje = $this->calcularPuntajeComentario($comment->body);
+        if ($article) {
+            $article->decrement('popularity_score', $puntaje);
+        }
+        // Eliminar el comentario
 
         $comment->delete();
 
         return $response->withJson([], 200);
     }
+
+
+    private function calcularPuntajeComentario($texto)
+    {
+        $positivas = [
+        'increible', 'excelente', 'bueno', 'util', 'genial', 'fantastico',
+        'maravilloso', 'perfecto', 'impresionante', 'claro', 'preciso',
+        'valioso', 'interesante', 'recomendado', 'gracias', 'felicitaciones',
+        'mejora', 'acierto', 'facil', 'correcto'
+        ];
+
+        $negativas = [
+            'malo', 'pesimo', 'inutil', 'error', 'odio', 'horrible', 'terrible',
+            'desastre', 'decepcionante', 'incorrecto', 'falso', 'confuso',
+            'equivocado', 'pobre', 'mediocre', 'basura', 'frustrante',
+            'problema', 'dificil', 'lento'
+        ];
+
+        // Normalizar texto a minúsculas y sin tildes
+        $texto = mb_strtolower($texto, 'UTF-8');
+        $texto = str_replace(
+            ['á', 'é', 'í', 'ó', 'ú'],
+            ['a', 'e', 'i', 'o', 'u'],
+            $texto
+        );
+        $texto = str_replace(['.', ',', '!', '?', ';', ':'], '', $texto);
+        $palabras = explode(' ', $texto);
+
+        $puntaje = 1; // base
+        foreach ($palabras as $p) {
+            if (in_array($p, $positivas)) $puntaje += 2;
+            if (in_array($p, $negativas)) $puntaje -= 2;
+        }
+        return $puntaje;
+    }
+
 
 }

@@ -52,11 +52,7 @@ $app->group('/api',
         // Define static routes before variable routes so FastRoute doesn't mark them as shadowed
         $this->get('/articles/feed', ArticleController::class . ':index')->add($optionalAuth)->setName('article.feed');
 
-        // Implementación de popularidad
-        $this->get('/articles/popular',
-            FavoriteController::class . ':popular')
-            ->add($optionalAuth)
-            ->setName('articles.popular');
+        $this->get('/articles/popular', PopularArticleController::class . ':index')->add($optionalAuth)->setName('article.popular');// agregado
 
         // List and create (static) routes
         $this->get('/articles', ArticleController::class . ':index')->add($optionalAuth)->setName('article.index');
