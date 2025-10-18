@@ -180,19 +180,29 @@ class CommentController
         });
 
         $puntaje = 1; // base
-        
+        $tienePositivas = false;
+        $tieneNegativas = false;
+
         foreach ($palabras as $palabra) {
             $palabra = trim($palabra);
+
             if (in_array($palabra, $positivas)) {
                 $puntaje += 2;
+                $tienePositivas = true;
             }
+
             if (in_array($palabra, $negativas)) {
                 $puntaje -= 2;
+                $tieneNegativas = true;
             }
         }
-        
+
+        // Si no contiene palabras positivas ni negativas → se considera "neutro"
+        if (!$tienePositivas && !$tieneNegativas) {
+            $puntaje = 1;
+        }
+
         return $puntaje;
     }
-
-
+    
 }
