@@ -179,33 +179,20 @@ class CommentController
             return trim($p) !== '';
         });
 
-        $puntaje = 0;
-        $tienePositivas = false;
-        $tieneNegativas = false;
-
+        $puntaje = 1; // base
+    
         foreach ($palabras as $palabra) {
             $palabra = trim($palabra);
-
             if (in_array($palabra, $positivas)) {
                 $puntaje += 2;
-                $tienePositivas = true;
             }
-
             if (in_array($palabra, $negativas)) {
                 $puntaje -= 2;
-                $tieneNegativas = true;
             }
         }
-
-        // Siempre sumar +1 base al final
-        // Pero si no hay palabras positivas ni negativas, solo contar ese +1
-        if (!$tienePositivas && !$tieneNegativas) {
-            $puntaje = 1;
-        } else {
-            $puntaje += 1;
-        }
-
+    
         return $puntaje;
-        
+
     }
+
 }
