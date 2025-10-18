@@ -32,14 +32,24 @@ class FavoriteController
 
     public function popular(Request $request, Response $response, array $args)
     {
-        // Obtener todos los artículos con su popularity_score
+        $requestUser = $this->auth->requestUser($request);
+        $requestUserId = optional($requestUser)->id;
+
+        // Traer los artículos con relaciones necesarias (autor, tags, etc.)
         $articles = Article::query()
-            ->select('id', 'title', 'slug', 'popularity_score')
+            ->with(['user', 'tags', 'favorites'])
             ->orderBy('popularity_score', 'desc')
+            ->limit(20)
             ->get();
 
+        // Usamos el transformer para devolver la estructura completa
+        $data = $this->fractal->createData(
+            new \League\Fractal\Resource\Collection($articles, new ArticleTransformer($requestUserId))
+        )->toArray();
+
         return $response->withJson([
-            'articles' => $articles
+            'articles' => $data['data'],
+            'articlesCount' => count($articles)
         ]);
     }
 
