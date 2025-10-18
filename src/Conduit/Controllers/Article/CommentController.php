@@ -155,14 +155,21 @@ class CommentController
         ];
 
         $negativas = [
-            'malo', 'pesimo', 'inutil', 'error', 'odio', 'horrible', 'terrible',
+            'malo', 'pesimo','pesima', 'inutil', 'error', 'odio', 'horrible', 'terrible',
             'desastre', 'decepcionante', 'incorrecto', 'falso', 'confuso',
             'equivocado', 'pobre', 'mediocre', 'basura', 'frustrante',
             'problema', 'dificil', 'lento'
         ];
 
-        $texto = iconv('UTF-8', 'ASCII//TRANSLIT', $texto);
+        // Normalizar texto a minúsculas
         $texto = mb_strtolower($texto, 'UTF-8');
+    
+        // Remover tildes
+        $texto = str_replace(
+            ['á', 'é', 'í', 'ó', 'ú', 'ñ'],
+            ['a', 'e', 'i', 'o', 'u', 'n'],
+            $texto
+        );
         
         // Remover signos de puntuación
         $texto = preg_replace('/[.,!?;:¡¿()"]/', ' ', $texto);
