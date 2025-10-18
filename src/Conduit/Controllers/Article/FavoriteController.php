@@ -49,15 +49,15 @@ class FavoriteController
             return $response->withJson([], 401);
         }
 
+        // Verificar si ya fue marcado como favorito
         $wasFavorited = $requestUser->favoriteArticles()->where('article_id', $article->id)->exists();
 
         $requestUser->favoriteArticles()->syncWithoutDetaching($article->id);
 
         if (!$wasFavorited) {
             // +2 puntos al añadir favorito
-            if (method_exists($article, 'updatePopularity')) {
-                $article->updatePopularity(+2);
-            }
+            $article->popularity_score = $article->popularity_score + 2;
+            $article->save();
         }
 
         $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
@@ -84,7 +84,16 @@ class FavoriteController
             return $response->withJson([], 401);
         }
 
+        // Verificar si realmente estaba en favoritos antes de quitarlo
+        $wasFavorited = $requestUser->favoriteArticles()->where('article_id', $article->id)->exists();
+
         $requestUser->favoriteArticles()->detach($article->id);
+
+        // Restar 2 puntos solo si estaba en favoritos
+        if ($wasFavorited) {
+            $article->popularity_score = $article->popularity_score - 2;
+            $article->save();
+        }
 
         $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
 

@@ -47,6 +47,8 @@ $app->group('/api',
             ->add($jwtMiddleware)
             ->setName('profile.unfollow');
 
+        // Popular Articles Routes
+        $this->get('/articles/popular', ArticleController::class . ':popular')->add($optionalAuth)->setName('article.popular');
 
         // Articles Routes
         $this->get('/articles/feed', ArticleController::class . ':index')->add($optionalAuth)->setName('article.index');
@@ -57,9 +59,6 @@ $app->group('/api',
             ArticleController::class . ':destroy')->add($jwtMiddleware)->setName('article.destroy');
         $this->post('/articles', ArticleController::class . ':store')->add($jwtMiddleware)->setName('article.store');
         $this->get('/articles', ArticleController::class . ':index')->add($optionalAuth)->setName('article.index');
-
-        // Popular Articles Routes
-        $this->get('/articles/popular', ArticleController::class . ':popular')->add($optionalAuth)->setName('article.popular');
 
         // Comments
         $this->get('/articles/{slug}/comments',
