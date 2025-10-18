@@ -89,12 +89,13 @@ class CommentController
         return $response->withJson(['errors' => $this->validator->getErrors()], 422);
     }
 
-    $ListGood = ['increíble', 'excelente', 'bueno', 'util', 'genial', 'fantástico', 'maravilloso', 'perfecto', 'impresionante', 'claro', 'preciso', 'valioso', 'interesante', 'recomendado', 'gracias', 'felicitaciones', 'mejora', 'acierto', 'fácil', 'correcto'];
+    $ListGood = ['increible', 'excelente', 'bueno', 'util', 'genial', 'fantastico', 'maravilloso', 'perfecto', 'impresionante', 'claro', 'preciso', 'valioso', 'interesante', 'recomendado', 'gracias', 'felicitaciones', 'mejora', 'acierto', 'facil', 'correcto'];
     $ListBad = ['malo', 'pesimo', 'inutil', 'error', 'odio', 'horrible', 'terrible', 'desastre', 'decepcionante', 'incorrecto', 'falso', 'confuso', 'equivocado', 'pobre', 'mediocre', 'basura', 'frustrante', 'problema', 'dificil', 'lento'];
     $bodyNormalized = strtolower($data['body']);
     $bodyNormalized = strtr($bodyNormalized, [
     'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
     ]);
+    $bodyNormalized = preg_replace('/[^\p{L}\s]/u', '', $bodyNormalized);
     $words = preg_split('/\s+/', $bodyNormalized);
     $commentScore = 0;
     foreach ($words as $word) {
