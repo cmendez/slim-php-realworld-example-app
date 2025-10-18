@@ -56,6 +56,10 @@ $container['validator'] = function ($c) {
     return new \Conduit\Validation\Validator();
 };
 
+$container['popularityService'] = function ($c) {
+    return new \Conduit\Services\Article\PopularityService();
+};
+
 // Fractal
 $container['fractal'] = function ($c) {
     $manager = new Manager();
