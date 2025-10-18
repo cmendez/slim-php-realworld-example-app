@@ -4,6 +4,7 @@ use Conduit\Controllers\Article\ArticleController;
 use Conduit\Controllers\Article\CommentController;
 use Conduit\Controllers\Article\FavoriteController;
 use Conduit\Controllers\Auth\LoginController;
+use Conduit\Controllers\Article\PopularArticleController;
 use Conduit\Controllers\Auth\RegisterController;
 use Conduit\Controllers\User\ProfileController;
 use Conduit\Controllers\User\UserController;
