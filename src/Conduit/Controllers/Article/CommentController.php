@@ -149,10 +149,10 @@ class CommentController
     private function calcularPuntajeComentario($texto)
     {
         $positivas = [
-        'increible', 'excelente', 'bueno', 'util', 'genial', 'fantastico',
-        'maravilloso', 'perfecto', 'impresionante', 'claro', 'preciso',
-        'valioso', 'interesante', 'recomendado', 'gracias', 'felicitaciones',
-        'mejora', 'acierto', 'facil', 'correcto'
+            'increible', 'excelente', 'bueno', 'util', 'genial', 'fantastico',
+            'maravilloso', 'perfecto', 'impresionante', 'claro', 'preciso',
+            'valioso', 'interesante', 'recomendado', 'gracias', 'felicitaciones',
+            'mejora', 'acierto', 'facil', 'correcto'
         ];
 
         $negativas = [
@@ -162,21 +162,36 @@ class CommentController
             'problema', 'dificil', 'lento'
         ];
 
-        // Normalizar texto a minúsculas y sin tildes
+        // Normalizar texto a minúsculas
         $texto = mb_strtolower($texto, 'UTF-8');
+        
+        // Remover tildes
         $texto = str_replace(
-            ['á', 'é', 'í', 'ó', 'ú'],
-            ['a', 'e', 'i', 'o', 'u'],
+            ['á', 'é', 'í', 'ó', 'ú', 'ñ'],
+            ['a', 'e', 'i', 'o', 'u', 'n'],
             $texto
         );
-        $texto = str_replace(['.', ',', '!', '?', ';', ':'], '', $texto);
-        $palabras = explode(' ', $texto);
+        
+        // Remover signos de puntuación
+        $texto = preg_replace('/[.,!?;:¡¿()"]/', ' ', $texto);
+        
+        // Separar palabras y eliminar espacios vacíos
+        $palabras = array_filter(explode(' ', $texto), function($p) {
+            return trim($p) !== '';
+        });
 
         $puntaje = 1; // base
-        foreach ($palabras as $p) {
-            if (in_array($p, $positivas)) $puntaje += 2;
-            if (in_array($p, $negativas)) $puntaje -= 2;
+        
+        foreach ($palabras as $palabra) {
+            $palabra = trim($palabra);
+            if (in_array($palabra, $positivas)) {
+                $puntaje += 2;
+            }
+            if (in_array($palabra, $negativas)) {
+                $puntaje -= 2;
+            }
         }
+        
         return $puntaje;
     }
 
