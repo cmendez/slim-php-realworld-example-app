@@ -38,7 +38,7 @@ class PopularityService
             $currentCommentScore = 1;
             
             // Normalizar texto para un análisis simple
-            $normalizedText = strtolower(preg_replace('/[^a-z0-9\s]/', '', iconv('UTF-8', 'ASCII//TRANSLIT', $body ?? '')));
+            $normalizedText = preg_replace('/[^a-z0-9\s]/', '', iconv('UTF-8', 'ASCII//TRANSLIT', strtolower($body ?? '')));
             $words = explode(' ', $normalizedText);
 
             foreach ($words as $word) {
