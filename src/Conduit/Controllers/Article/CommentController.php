@@ -4,6 +4,11 @@ namespace Conduit\Controllers\Article;
 
 use Conduit\Models\Article;
 use Conduit\Models\Comment;
+<<<<<<< HEAD
+=======
+use Conduit\Services\CommentPopularityService;
+use Conduit\Transformers\ArticleTransformer;
+>>>>>>> GRUPO_D
 use Conduit\Transformers\CommentTransformer;
 use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
@@ -47,10 +52,16 @@ class CommentController
     {
         $requestUserId = optional($this->auth->requestUser($request))->id;
 
+<<<<<<< HEAD
         $article = Article::query()
             ->with('comments')
             ->where('slug', $args['slug'])
             ->firstOrFail();
+=======
+        $article = Article::query()->with(['comments' => function ($query) {
+            $query->orderBy('popularity', 'desc');
+        }])->where('slug', $args['slug'])->firstOrFail();
+>>>>>>> GRUPO_D
 
         $data = $this->fractal
             ->createData(new Collection($article->comments, new CommentTransformer($requestUserId)))
@@ -79,11 +90,17 @@ class CommentController
             return $response->withJson(['errors' => $this->validator->getErrors()], 422);
         }
 
+<<<<<<< HEAD
         // Guardamos el comentario
+=======
+        $popularity = CommentPopularityService::calculatePopularity($data['body']);
+
+>>>>>>> GRUPO_D
         $comment = Comment::create([
             'body'       => $data['body'],
             'user_id'    => $requestUser->id,
             'article_id' => $article->id,
+            'popularity' => $popularity,
         ]);
 
         // 👇 Calculamos su aporte y lo persistimos

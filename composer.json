@@ -20,27 +20,30 @@
         "robmorgan/phinx": "^0.13.0",
         "vlucas/phpdotenv": "^2.4",
         "tuupola/slim-jwt-auth": "^2.3",
-        "fzaninotto/faker": "^1.7",
+        "fakerphp/faker": "^1.14",
         "respect/validation": "^1.1",
         "league/fractal": "^0.17.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^6.4"
+        "phpunit/phpunit": "^9.5"
     },
     "autoload": {
       "psr-4": {
           "Conduit\\": "src/Conduit"
-      }
+      },
+      "classmap": ["database/"]
     },
     "autoload-dev": {
-        "classmap": ["database/"],
         "psr-4": {
             "Tests\\": "tests/"
         }
     },
     "config": {
         "process-timeout" : 0,
-        "php": "5.6"
+        "php": "5.6",
+        "allow-plugins": {
+            "kylekatarnls/update-helper": true
+        }
     },
     "scripts": {
         "post-install-cmd": [

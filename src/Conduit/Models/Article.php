@@ -33,8 +33,12 @@ class Article extends Model
         'body',
         'user_id',
         'publish_date',
+<<<<<<< HEAD
         'reading_time',   
         'popularity_score',
+=======
+        'reading_time',
+>>>>>>> GRUPO_D
     ];
 
     protected $casts = [
@@ -84,6 +88,11 @@ class Article extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function getPopularityAttribute()
+    {
+        return $this->comments()->sum('popularity');
     }
 
     /**

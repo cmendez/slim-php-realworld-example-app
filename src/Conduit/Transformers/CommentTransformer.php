@@ -38,10 +38,11 @@ class CommentTransformer extends TransformerAbstract
     public function transform(Comment $comment)
     {
         return [
-            'id'        => $comment->id,
-            'createdAt' => $comment->created_at->toIso8601String(),
-            'updatedAt' => isset($user->update_at) ? $comment->update_at->toIso8601String() : $comment->update_at,
-            'body'      => $comment->body,
+            'id'         => $comment->id,
+            'createdAt'  => $comment->created_at->toIso8601String(),
+            'updatedAt'  => isset($comment->update_at) ? $comment->update_at->toIso8601String() : $comment->update_at,
+            'body'       => $comment->body,
+            'popularity' => $comment->popularity,
         ];
     }
 
