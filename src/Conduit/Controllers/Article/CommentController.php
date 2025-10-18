@@ -144,8 +144,7 @@ class CommentController
 
         return $response->withJson([], 200);
     }
-
-
+    
     private function calcularPuntajeComentario($texto)
     {
         $positivas = [
@@ -162,15 +161,8 @@ class CommentController
             'problema', 'dificil', 'lento'
         ];
 
-        // Normalizar texto a minúsculas
+        $texto = iconv('UTF-8', 'ASCII//TRANSLIT', $texto);
         $texto = mb_strtolower($texto, 'UTF-8');
-        
-        // Remover tildes
-        $texto = str_replace(
-            ['á', 'é', 'í', 'ó', 'ú', 'ñ'],
-            ['a', 'e', 'i', 'o', 'u', 'n'],
-            $texto
-        );
         
         // Remover signos de puntuación
         $texto = preg_replace('/[.,!?;:¡¿()"]/', ' ', $texto);
