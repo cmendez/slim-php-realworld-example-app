@@ -179,7 +179,7 @@ class CommentController
             return trim($p) !== '';
         });
 
-        $puntaje = 1; // base
+        $puntaje = 0;
         $tienePositivas = false;
         $tieneNegativas = false;
 
@@ -197,12 +197,15 @@ class CommentController
             }
         }
 
-        // Si no contiene palabras positivas ni negativas → se considera "neutro"
+        // Siempre sumar +1 base al final
+        // Pero si no hay palabras positivas ni negativas, solo contar ese +1
         if (!$tienePositivas && !$tieneNegativas) {
             $puntaje = 1;
+        } else {
+            $puntaje += 1;
         }
 
         return $puntaje;
+        
     }
-    
 }
