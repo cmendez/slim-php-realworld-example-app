@@ -161,6 +161,7 @@ class ArticleController
             'body' => $data['body'],
             // Guardar el valor en la nueva columna
             'reading_time' => $readingTime, 
+            'popularity_score' => 0,
         ]);
         
         $article->slug = str_slug($article->title);
