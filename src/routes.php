@@ -11,7 +11,7 @@ use Conduit\Middleware\OptionalAuth;
 use Conduit\Models\Tag;
 use Slim\Http\Request;
 use Slim\Http\Response;
-
+use Conduit\Controllers\Image\ImageSearchController;
 
 // Api Routes
 $app->group('/api',
@@ -81,6 +81,10 @@ $app->group('/api',
             FavoriteController::class . ':destroy')
             ->add($jwtMiddleware)
             ->setName('favorite.destroy');
+
+        $this->get('/images/search', ImageSearchController::class . ':search')
+            ->add($jwtMiddleware) 
+            ->setName('images.search');
 
         // Tags Route
         $this->get('/tags', function (Request $request, Response $response) {

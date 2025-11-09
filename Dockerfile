@@ -5,8 +5,9 @@ FROM php:8.1-fpm-alpine
 WORKDIR /var/www/html
 
 # Instalar dependencias del sistema y extensiones de PHP necesarias
-RUN apk add --no-cache git unzip \
-    && docker-php-ext-install pdo pdo_mysql opcache
+RUN apk add --no-cache git unzip curl curl-dev \
+    && docker-php-ext-install pdo pdo_mysql opcache \
+    && docker-php-ext-install curl
 
 # Instalar Composer (gestor de dependencias de PHP)
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

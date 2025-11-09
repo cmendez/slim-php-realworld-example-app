@@ -58,5 +58,9 @@ return [
             "regexp" => "/Token\s+(.*)$/i",
             'passthrough' => ['OPTIONS']
         ],
+
+        'unsplash' => [
+            'access_key' => getenv('UNSPLASH')  //No olvidar configurar esta variable en el archivo .env  , ejemplo:  UNSPLASH=xxxxxxxxxxx
+        ]
     ],
 ];
