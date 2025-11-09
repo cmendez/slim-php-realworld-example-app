@@ -31,7 +31,7 @@ services:
   db:
     image: mysql:8.0
     ports:
-      - "33066:3306" # Usamos el puerto 33066 para no chocar con XAMPP
+      - "33066:3306" # Usamos el puerto 33066 
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=${DB_DATABASE}

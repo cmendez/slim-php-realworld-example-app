@@ -52,9 +52,53 @@ class LoginController
         }
 
         if ($user = $this->auth->attempt($userParams['email'], $userParams['password'])) {
+            // 1. Genera el token de PHP (como antes)
             $user->token = $this->auth->generateToken($user);
-            $data = $this->fractal->createData(new Item($user, new UserTransformer()))->toArray();
 
+            // --- NUEVO: INICIO DE LA LLAMADA AL API DE PYTHON ---
+            
+            $pythonApiUrl = 'http://host.docker.internal:8080/api/users/login';
+            $pythonToken = null; // Token por defecto
+
+            // Prepara los datos POST para Python
+            $postData = [
+                'username' => $userParams['email'], // El API de Python espera el email en el campo 'username'
+                'password' => $userParams['password']
+            ];
+
+            // Inicializa cURL
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $pythonApiUrl);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Timeout de 5 segundos
+
+            // Ejecuta la llamada
+            $apiResponse = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            // Procesa la respuesta de Python
+            if ($httpCode == 200) {
+                $body = json_decode($apiResponse);
+                if (isset($body->access_token)) {
+                    $pythonToken = $body->access_token;
+                }
+            } else {
+                // Si Python falla, al menos loguea el error pero no detengas el login de PHP
+                error_log('Fallo el login de Python. Código: ' . $httpCode . ' Respuesta: ' . $apiResponse);
+            }
+            
+            // --- NUEVO: FIN DE LA LLAMADA AL API DE PYTHON ---
+
+            // 2. Transforma los datos del usuario (como antes)
+            $data = $this->fractal->createData(new Item($user, new UserTransformer()))->toArray();
+            
+            // 3. NUEVO: Añade el token de Python al array de datos final
+            $data['python_token'] = $pythonToken;
+
+            // 4. Devuelve la respuesta JSON con AMBOS tokens
             return $response->withJson(['user' => $data]);
         };
 
