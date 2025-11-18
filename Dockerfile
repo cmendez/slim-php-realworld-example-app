@@ -1,6 +1,11 @@
 # Usamos la imagen de PHP con Apache integrado
 FROM php:8.1-apache
 
+# --- NUEVO: Usar configuración de producción de PHP ---
+# Esto oculta los Deprecated Warnings y Errors de la respuesta HTTP
+# para que tu JSON salga limpio.
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
 # Instalar dependencias del sistema y extensiones
 RUN apt-get update && apt-get install -y \
     git \
