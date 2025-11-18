@@ -1,6 +1,17 @@
 <?php
 
 require_once './vendor/autoload.php';
+
+// --- CORRECCIÓN DE ERROR "Class BaseMigration not found" ---
+// Cargamos manualmente la clase BaseMigration que está en la carpeta generator
+// Usamos __DIR__ para asegurar que la ruta sea absoluta desde la raíz
+$baseMigrationPath = __DIR__ . '/database/generator/BaseMigration.php';
+
+if (file_exists($baseMigrationPath)) {
+    require_once $baseMigrationPath;
+}
+
+// --- CARGA DE DEPENDENCIAS DE SLIM ---
 $settings = require './src/settings.php';
 $app = new \Slim\App($settings);
 $container = $app->getContainer();
@@ -22,16 +33,22 @@ return [
 
     'environments' => [
         'default_migration_table' => 'migrations',
-        // OJO: En Render queremos que use 'production' por defecto si no se especifica
-        // Cambiamos esto temporalmente o aseguramos pasar -e production
+        
+        // LÓGICA AUTOMÁTICA:
+        // Si la variable de entorno APP_ENV es 'production', usa la config de producción (con SSL).
+        // Si no, usa 'development' (tu local).
         'default_environment' => getenv('APP_ENV') === 'production' ? 'production' : 'development',
         
+        // ENTORNO LOCAL (Docker Desktop)
         'development' => [
             'name'       => $config['database'],
+            // Usa la conexión PDO directa que ya creó tu contenedor localmente
             'connection' => $container->get('db')->getConnection()->getPdo(),
         ],
+        
+        // ENTORNO NUBE (Render + TiDB)
         'production' => [
-            'adapter'   => 'mysql', // Si $config['driver'] da problemas, forzamos 'mysql'
+            'adapter'   => 'mysql',
             'host'      => $config['host'],
             'name'      => $config['database'],
             'user'      => $config['username'],
@@ -40,7 +57,7 @@ return [
             'charset'   => 'utf8',
             'collation' => 'utf8_unicode_ci',
             'prefix'    => '',
-            // --- ESTA ES LA LÍNEA MÁGICA PARA TIDB EN RENDER ---
+            // CONFIGURACIÓN SSL OBLIGATORIA PARA TIDB
             'mysql_attr_ssl_ca' => '/etc/ssl/certs/ca-certificates.crt',
         ],
     ],
