@@ -1,36 +1,52 @@
-# Usar una imagen oficial de PHP 8.1 con PHP-FPM y Alpine (ligera)
-FROM php:8.1-fpm-alpine
+# Usamos la imagen de PHP con Apache integrado
+FROM php:8.1-apache
 
-# Establecer el directorio de trabajo
+# --- NUEVO: Usar configuración de producción de PHP ---
+# Esto oculta los Deprecated Warnings y Errors de la respuesta HTTP
+# para que tu JSON salga limpio.
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+# Instalar dependencias del sistema y extensiones
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libcurl4-openssl-dev \
+    && docker-php-ext-install pdo pdo_mysql opcache curl \
+    && a2enmod rewrite
+
+# Configurar Apache para que la raiz sea /public
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
+
+# --- NUEVO: Permitir el uso de .htaccess (AllowOverride All) ---
+# Sin esto, Apache ignora el archivo .htaccess y las rutas dan 404
+RUN echo "<Directory /var/www/html/public>" > /etc/apache2/conf-available/override.conf \
+    && echo "    AllowOverride All" >> /etc/apache2/conf-available/override.conf \
+    && echo "</Directory>" >> /etc/apache2/conf-available/override.conf \
+    && a2enconf override
+
 WORKDIR /var/www/html
 
-# Instalar dependencias del sistema y extensiones de PHP necesarias
-RUN apk add --no-cache git unzip curl curl-dev \
-    && docker-php-ext-install pdo pdo_mysql opcache \
-    && docker-php-ext-install curl
-
-# Instalar Composer (gestor de dependencias de PHP)
+# Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copiar los archivos de la aplicación al contenedor
+# Copiar archivos del proyecto
 COPY . .
 
-# Añadir el directorio actual como seguro para Git (SOLUCIÓN SECUNDARIA)
-RUN git config --global --add safe.directory /var/www/html
-
-# Instalar las dependencias de la aplicación con Composer
-# Usamos --ignore-platform-reqs para solucionar los problemas de versiones antiguas
+# Instalar dependencias de PHP (Optimizadas para prod)
 RUN composer install --no-interaction --optimize-autoloader --no-dev --ignore-platform-reqs
 
-# Crear las carpetas necesarias ANTES de cambiar sus permisos
-RUN mkdir -p /var/www/html/storage \
-    && mkdir -p /var/www/html/bootstrap/cache
+# Permisos
+RUN chown -R www-data:www-data /var/www/html
 
-# Cambiar el propietario de los archivos al usuario del servidor web
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Script de inicio
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Exponer el puerto en el que PHP-FPM escucha
-EXPOSE 9000
+# Render inyecta la variable PORT, Apache por defecto usa el 80.
+# Exponemos el 80 para documentación
+EXPOSE 80
 
-# Comando para iniciar el servicio de PHP-FPM
-CMD ["php-fpm"]
+# Usamos el script como comando de inicio
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
