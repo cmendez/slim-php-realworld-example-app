@@ -1,12 +1,12 @@
-# Usar una imagen oficial de PHP 8.1 con PHP-FPM y Alpine (ligera)
-FROM php:8.1-fpm-alpine
+# Usar una imagen oficial de PHP 8.5.9 con PHP-FPM y Alpine (ligera)
+FROM php:8.5.9-fpm-alpine
 
 # Establecer el directorio de trabajo
 WORKDIR /var/www/html
 
 # Instalar dependencias del sistema y extensiones de PHP necesarias
 RUN apk add --no-cache git unzip curl curl-dev \
-    && docker-php-ext-install pdo pdo_mysql opcache \
+    && docker-php-ext-install pdo pdo_mysql \
     && docker-php-ext-install curl
 
 # Instalar Composer (gestor de dependencias de PHP)
