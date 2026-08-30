@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Controllers\Article;
 
 use Conduit\Models\Article;
 use Conduit\Transformers\ArticleTransformer;
-use Interop\Container\ContainerInterface;
 use League\Fractal\Resource\Item;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -18,9 +19,9 @@ class FavoriteController
     protected $fractal;
 
     /**
-     * UserController constructor.
+     * FavoriteController constructor.
      *
-     * @param \Interop\Container\ContainerInterface $container
+     * @param \Slim\Container $container
      *
      * @internal param $auth
      */

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Services\Database;
 
 use Illuminate\Database\Capsule\Manager;
@@ -25,23 +27,23 @@ class EloquentServiceProvider implements ServiceProviderInterface
         $capsule->addConnection([
             'driver'    => $config['driver'],
             'host'      => $config['host'],
+            'port'      => $config['port'],
             'database'  => $config['database'],
             'username'  => $config['username'],
             'password'  => $config['password'],
-            'charset'   => 'utf8',
-            'collation' => 'utf8_unicode_ci',
-            'prefix'    => '',
+            'charset'   => $config['charset'],
+            'collation' => $config['collation'],
+            'prefix'    => $config['prefix'],
         ]);
 
-// Make this Capsule instance available globally via static methods... (optional)
+        // Make this Capsule instance available globally via static methods... (optional)
         $capsule->setAsGlobal();
 
-// Setup the Eloquent ORM... (optional; unless you've used setEventDispatcher())
+        // Setup the Eloquent ORM... (optional; unless you've used setEventDispatcher())
         $capsule->bootEloquent();
 
 
         $pimple['db'] = function ($c) use ($capsule) {
-
             return $capsule;
         };
     }

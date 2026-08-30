@@ -1,6 +1,8 @@
 <?php
 // DIC configuration
 
+declare(strict_types=1);
+
 /** @var Pimple\Container $container */
 
 use Conduit\Middleware\OptionalAuth;
@@ -19,14 +21,14 @@ $container['errorHandler'] = function ($c) {
 $container->register(new \Conduit\Services\Database\EloquentServiceProvider());
 $container->register(new \Conduit\Services\Auth\AuthServiceProvider());
 
-// view renderer
+// View renderer
 $container['renderer'] = function ($c) {
     $settings = $c->get('settings')['renderer'];
 
     return new Slim\Views\PhpRenderer($settings['template_path']);
 };
 
-// monolog
+// Monolog
 $container['logger'] = function ($c) {
     $settings = $c->get('settings')['logger'];
     $logger = new Monolog\Logger($settings['name']);
@@ -39,9 +41,9 @@ $container['logger'] = function ($c) {
 // Jwt Middleware
 $container['jwt'] = function ($c) {
 
-    $jws_settings = $c->get('settings')['jwt'];
+    $jwt_settings = $c->get('settings')['jwt'];
 
-    return new \Slim\Middleware\JwtAuthentication($jws_settings);
+    return new \Slim\Middleware\JwtAuthentication($jwt_settings);
 };
 
 $container['optionalAuth'] = function ($c) {

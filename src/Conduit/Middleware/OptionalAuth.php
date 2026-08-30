@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Middleware;
 
 use Interop\Container\ContainerInterface;
@@ -36,10 +38,10 @@ class OptionalAuth
      */
     public function __invoke($request, $response, $next)
     {
-        if ($request->hasHeader('HTTP_AUTHORIZATION')) {
+        if ($request->hasHeader('Authorization')) {
             $callable = new DeferredCallable($this->container->get('jwt'), $this->container);
 
-            return call_user_func($callable, $request, $response, $next);
+            return $callable($request, $response, $next);
         }
 
         return $next($request, $response);

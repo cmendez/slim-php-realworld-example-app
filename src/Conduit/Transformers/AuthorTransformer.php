@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Transformers;
 
 use Conduit\Models\User;
@@ -16,7 +18,7 @@ class AuthorTransformer extends TransformerAbstract
     /**
      * AuthorTransformer constructor.
      *
-     * @param int $requestUserId
+     * @param int|null $requestUserId
      */
     public function __construct($requestUserId = null)
     {

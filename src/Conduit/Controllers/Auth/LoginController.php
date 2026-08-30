@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Controllers\Auth;
 
 use Conduit\Models\User;
 use Conduit\Transformers\UserTransformer;
-use Interop\Container\ContainerInterface;
 use League\Fractal\Resource\Item;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -21,11 +22,13 @@ class LoginController
     protected $fractal;
     /** @var \Conduit\Services\Auth\Auth */
     private $auth;
+    /** @var array */
+    private $settings;
 
     /**
-     * RegisterController constructor.
+     * LoginController constructor.
      *
-     * @param \Interop\Container\ContainerInterface $container
+     * @param \Slim\Container $container
      */
     public function __construct(\Slim\Container $container)
     {
@@ -33,6 +36,7 @@ class LoginController
         $this->validator = $container->get('validator');
         $this->db = $container->get('db');
         $this->fractal = $container->get('fractal');
+        $this->settings = $container->get('settings');
     }
 
     /**
@@ -52,55 +56,57 @@ class LoginController
         }
 
         if ($user = $this->auth->attempt($userParams['email'], $userParams['password'])) {
-            // 1. Genera el token de PHP (como antes)
+            // 1. Generate PHP token
             $user->token = $this->auth->generateToken($user);
 
-            // --- NUEVO: INICIO DE LA LLAMADA AL API DE PYTHON ---
+            // --- START PYTHON API CALL ---
             
-            $pythonApiUrl = 'http://host.docker.internal:8080/api/users/login';
-            $pythonToken = null; // Token por defecto
+            $pythonApiUrl = $this->settings['python_api']['url'] . '/api/users/login';
+            $pythonToken = null; // Default token
 
-            // Prepara los datos POST para Python
+            // Prepare POST data for Python
             $postData = [
-                'username' => $userParams['email'], // El API de Python espera el email en el campo 'username'
+                'username' => $userParams['email'], // Python API expects email in 'username' field
                 'password' => $userParams['password']
             ];
 
-            // Inicializa cURL
+            // Initialize cURL
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $pythonApiUrl);
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Timeout de 5 segundos
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5); // 5 seconds timeout
 
-            // Ejecuta la llamada
+            // Execute call
             $apiResponse = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            // Procesa la respuesta de Python
+            // Process Python response
             if ($httpCode == 200) {
                 $body = json_decode($apiResponse);
                 if (isset($body->access_token)) {
                     $pythonToken = $body->access_token;
                 }
             } else {
-                // Si Python falla, al menos loguea el error pero no detengas el login de PHP
-                error_log('Fallo el login de Python. Código: ' . $httpCode . ' Respuesta: ' . $apiResponse);
+                // If Python fails, log error but don't stop PHP login
+                error_log('Python login failed. Code: ' . $httpCode . ' Response: ' . $apiResponse);
             }
             
-            // --- NUEVO: FIN DE LA LLAMADA AL API DE PYTHON ---
+            // --- END PYTHON API CALL ---
 
-            // 2. Transforma los datos del usuario (como antes)
+            // 2. Transform user data
             $data = $this->fractal->createData(new Item($user, new UserTransformer()))->toArray();
             
-            // 3. NUEVO: Añade el token de Python al array de datos final
-            $data['python_token'] = $pythonToken;
+            // 3. Return JSON response
+            // python_token is intentionally omitted from the public response body for security.
+            if ($pythonToken) {
+                $response = $response->withHeader('X-Python-Token', $pythonToken);
+            }
 
-            // 4. Devuelve la respuesta JSON con AMBOS tokens
             return $response->withJson(['user' => $data]);
-        };
+        }
 
         return $response->withJson(['errors' => ['email or password' => ['is invalid']]], 422);
     }

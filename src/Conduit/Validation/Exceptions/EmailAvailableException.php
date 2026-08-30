@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Validation\Exceptions;
 
 use \Respect\Validation\Exceptions\ValidationException;

@@ -1,8 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 // Define root path
-defined('DS') ?: define('DS', DIRECTORY_SEPARATOR);
-defined('ROOT') ?: define('ROOT', dirname(__DIR__) . DS);
+if (!defined('DS')) {
+    define('DS', DIRECTORY_SEPARATOR);
+}
+if (!defined('ROOT')) {
+    define('ROOT', dirname(__DIR__) . DS);
+}
 
 // Load .env file
 if (file_exists(ROOT . '.env')) {
@@ -13,7 +19,7 @@ if (file_exists(ROOT . '.env')) {
 
 return [
     'settings' => [
-        'displayErrorDetails'    => true, // set to false in production
+        'displayErrorDetails'    => getenv('APP_ENV') !== 'production', // set to false in production
         'addContentLengthHeader' => false, // Allow the web server to send the content-length header
 
         // App Settings
@@ -21,6 +27,11 @@ return [
             'name' => getenv('APP_NAME'),
             'url'  => getenv('APP_URL'),
             'env'  => getenv('APP_ENV'),
+        ],
+
+        // Python API
+        'python_api'             => [
+            'url' => getenv('PYTHON_API_URL') ?: 'http://host.docker.internal:8080',
         ],
 
         // Renderer settings
@@ -53,14 +64,15 @@ return [
         // jwt settings
         'jwt'  => [
             'secret' => getenv('JWT_SECRET'),
-            'secure' => false,
-            "header" => "Authorization",
-            "regexp" => "/Token\s+(.*)$/i",
+            'secure' => getenv('APP_ENV') === 'production',
+            'header' => 'Authorization',
+            'regexp' => '/Token\s+(.*)$/i',
             'passthrough' => ['OPTIONS']
         ],
 
         'unsplash' => [
-            'access_key' => getenv('UNSPLASH')  //No olvidar configurar esta variable en el archivo .env  , ejemplo:  UNSPLASH=xxxxxxxxxxx
+            'access_key' => getenv('UNSPLASH')  // Don't forget to configure this variable in the .env file, example: UNSPLASH=xxxxxxxxxxx
         ]
     ],
 ];
+

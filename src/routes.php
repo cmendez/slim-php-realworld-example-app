@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 use Conduit\Controllers\Article\ArticleController;
 use Conduit\Controllers\Article\CommentController;
 use Conduit\Controllers\Article\FavoriteController;
+use Conduit\Controllers\Article\TagController;
 use Conduit\Controllers\Auth\LoginController;
 use Conduit\Controllers\Auth\RegisterController;
 use Conduit\Controllers\User\ProfileController;
@@ -33,12 +36,12 @@ $app->group('/api',
             ->add($optionalAuth)
             ->setName('profile.show');
 
-        // Ruta para actualizar el perfil del usuario
+        // Route to update user profile
         $this->put('/profiles/{username}', ProfileController::class . ':update')
             ->add($jwtMiddleware)
             ->setName('profile.update');
 
-        // Rutas para seguir y dejar de seguir, ahora apuntando al controlador correcto
+        // Routes to follow and unfollow, now pointing to the correct controller
         $this->post('/profiles/{username}/follow', ProfileController::class . ':follow')
             ->add($jwtMiddleware)
             ->setName('profile.follow');
@@ -49,7 +52,7 @@ $app->group('/api',
 
 
         // Articles Routes
-        $this->get('/articles/feed', ArticleController::class . ':index')->add($optionalAuth)->setName('article.index');
+        $this->get('/articles/feed', ArticleController::class . ':index')->add($optionalAuth)->setName('article.feed');
         $this->get('/articles/{slug}', ArticleController::class . ':show')->add($optionalAuth)->setName('article.show');
         $this->put('/articles/{slug}',
             ArticleController::class . ':update')->add($jwtMiddleware)->setName('article.update');
@@ -87,11 +90,7 @@ $app->group('/api',
             ->setName('images.search');
 
         // Tags Route
-        $this->get('/tags', function (Request $request, Response $response) {
-            return $response->withJson([
-                'tags' => Tag::all('title')->pluck('title'),
-            ]);
-        });
+        $this->get('/tags', TagController::class . ':index')->setName('tags.index');
     });
 
 

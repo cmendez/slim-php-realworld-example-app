@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Controllers\User;
 
 use Conduit\Models\User;
@@ -21,7 +23,7 @@ class ProfileController
         $requestUser = $this->auth->requestUser($request);
         $followingStatus = $requestUser ? $requestUser->isFollowing($user->id) : false;
 
-        // Devolvemos todos los campos del perfil directamente desde el usuario
+        // Return all profile fields directly from the user
         $profileData = [
             'username' => $user->username,
             'bio' => $user->bio,
@@ -38,15 +40,15 @@ class ProfileController
     {
         $userToUpdate = User::where('username', $args['username'])->firstOrFail();
 
-        // Usar el servicio de autenticación, igual que los otros controladores
+        // Use the auth service, just like the other controllers
         $currentUser = $this->auth->requestUser($request);
 
-        // Si el token no es válido o no se envió, $currentUser será null
+        // If the token is not valid or not sent, $currentUser will be null
         if (!$currentUser) {
             return $response->withStatus(401); // Unauthorized
         }
 
-        // Validación de Seguridad: Solo puedes editar tu propio perfil
+        // Security Validation: You can only edit your own profile
         if ($currentUser->id !== $userToUpdate->id) {
             return $response->withStatus(403); // Forbidden
         }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Transformers;
 
 use Conduit\Models\User;
@@ -14,7 +16,7 @@ class UserTransformer extends TransformerAbstract
             'id'        => (int)$user->id,
             'email'     => $user->email,
             'createdAt' => optional($user->created_at)->toIso8601String(),
-            'updatedAt' => optional($user->update_at)->toIso8601String(),
+            'updatedAt' => optional($user->updated_at)->toIso8601String(),
             'username'  => $user->username,
             'bio'       => $user->bio,
             'image'     => $user->image,
