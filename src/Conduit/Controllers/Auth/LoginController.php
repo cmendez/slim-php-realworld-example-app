@@ -100,10 +100,8 @@ class LoginController
             $data = $this->fractal->createData(new Item($user, new UserTransformer()))->toArray();
             
             // 3. Return JSON response
-            // python_token is intentionally omitted from the public response body for security.
-            if ($pythonToken) {
-                $response = $response->withHeader('X-Python-Token', $pythonToken);
-            }
+            // The frontend explicitly expects python_token in the body.
+            $data['python_token'] = $pythonToken;
 
             return $response->withJson(['user' => $data]);
         }
