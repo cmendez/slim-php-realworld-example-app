@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Controllers\Article;
 use Carbon\Carbon;
 use Conduit\Models\Article;
 use Conduit\Models\Tag;
 use Conduit\Transformers\ArticleTransformer;
-use Interop\Container\ContainerInterface;
 use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
 use Slim\Http\Request;
@@ -14,6 +15,7 @@ use Respect\Validation\Validator as v;
 
 class ArticleController
 {
+    public const DEFAULT_PAGE_SIZE = 20;
 
     /** @var \Conduit\Validation\Validator */
     protected $validator;
@@ -25,9 +27,9 @@ class ArticleController
     protected $fractal;
 
     /**
-     * UserController constructor.
+     * ArticleController constructor.
      *
-     * @param \Interop\Container\ContainerInterface $container
+     * @param \Slim\Container $container
      *
      * @internal param $auth
      */
@@ -53,7 +55,7 @@ class ArticleController
         // TODO Extract the logic of filtering articles to its own class
 
         $requestUserId = optional($requestUser = $this->auth->requestUser($request))->id;
-        $builder = Article::query()->latest()->with(['tags', 'user'])->limit(20);
+        $builder = Article::query()->latest()->with(['tags', 'user'])->limit(self::DEFAULT_PAGE_SIZE);
 
 
         if ($request->getUri()->getPath() == '/api/articles/feed') {
@@ -141,7 +143,7 @@ class ArticleController
             'title'       => v::notEmpty(),
             'description' => v::notEmpty(),
             'body'        => v::notEmpty(),
-            // Mantenemos la validación para asegurarnos de que el formato es correcto
+            // Keep validation to ensure correct format
             'publishDate' => v::optional(v::date()), 
         ]);
 
@@ -149,7 +151,7 @@ class ArticleController
             return $response->withJson(['errors' => $this->validator->getErrors()], 422);
         }
         
-        // Aquí usamos el constructor solo para los campos que no dan problemas
+        // Here we use the constructor only for fields that don't cause problems
         $article = new Article([
             'title' => $data['title'],
             'description' => $data['description'],
@@ -159,7 +161,7 @@ class ArticleController
         $article->slug = str_slug($article->title);
         $article->user_id = $requestUser->id;
 
-        // Verificamos si 'publishDate' existe y creamos un objeto Carbon explícitamente.
+        // We verify if 'publishDate' exists and explicitly create a Carbon object.
         if (!empty($data['publishDate'])) {
             $article->publish_date = Carbon::parse($data['publishDate']);
         }
@@ -174,9 +176,9 @@ class ArticleController
             $article->tags()->sync($tagsId);
         }
 
-        $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
+        $payload = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();
         
-        return $response->withJson(['article' => $data]);
+        return $response->withJson(['article' => $payload]);
     }
 
     /**
@@ -201,12 +203,12 @@ class ArticleController
             return $response->withJson(['message' => 'Forbidden'], 403);
         }
 
-        // Obtenemos los datos del request en la variable $params
+        // Get request data into $params variable
         $params = $request->getParam('article', []);
 
-        // --- 1. AÑADIR VALIDACIÓN ---
+        // --- 1. ADD VALIDATION ---
         $this->validator->validateArray($params, [
-            // Hacemos que todos los campos sean opcionales en la actualización
+            // Make all fields optional on update
             'title'       => v::optional(v::notEmpty()),
             'description' => v::optional(v::notEmpty()),
             'publishDate' => v::optional(v::date()),
@@ -216,11 +218,11 @@ class ArticleController
             return $response->withJson(['errors' => $this->validator->getErrors()], 422);
         }
 
-        // --- 2. ACTUALIZAR CAMPOS INDIVIDUALMENTE ---
-        // Esto es más claro y evita problemas con la asignación masiva
+        // --- 2. UPDATE FIELDS INDIVIDUALLY ---
+        // This is clearer and avoids mass assignment issues
         if (isset($params['title'])) {
             $article->title = $params['title'];
-            $article->slug = str_slug($params['title']); // Actualizamos el slug si cambia el título
+            $article->slug = str_slug($params['title']); // Update slug if title changes
         }
 
         if (isset($params['description'])) {
@@ -231,14 +233,14 @@ class ArticleController
             $article->body = $params['body'];
         }
 
-        // --- 3. MANEJAR LA FECHA DE PUBLICACIÓN CON CARBON ---
+        // --- 3. HANDLE PUBLISH DATE WITH CARBON ---
         if (isset($params['publishDate'])) {
-            // Si la fecha es un string vacío o nulo, la establecemos como null en la BD.
-            // Si no, la parseamos con Carbon.
+            // If the date is an empty string or null, set it to null in the DB.
+            // Otherwise, parse it with Carbon.
             $article->publish_date = empty($params['publishDate']) ? null : Carbon::parse($params['publishDate']);
         }
 
-        // --- 4. GUARDAR TODOS LOS CAMBIOS ---
+        // --- 4. SAVE ALL CHANGES ---
         $article->save();
 
         $data = $this->fractal->createData(new Item($article, new ArticleTransformer($requestUser->id)))->toArray();

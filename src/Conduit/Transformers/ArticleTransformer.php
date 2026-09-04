@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Transformers;
 
 use Conduit\Models\Article;
@@ -39,11 +41,11 @@ class ArticleTransformer extends TransformerAbstract
             "title"          => $article->title,
             "description"    => $article->description,
             "body"           => $article->body,
-            "tagList"        => optional($article->tags()->get(['title']))->pluck('title'),
+            "tagList"        => optional($article->tags)->pluck('title'),
             'createdAt'      => $article->created_at->toIso8601String(),
-            'updatedAt'      => isset($user->update_at) ? $article->update_at->toIso8601String() : $article->update_at,
+            'updatedAt'      => isset($article->updated_at) ? $article->updated_at->toIso8601String() : $article->updated_at,
             "favorited"      => $article->isFavoritedByUser($this->requestUserId),
-            "favoritesCount" => $article->favorites()->count(),
+            "favoritesCount" => $article->favorites->count(),
             'publishDate'    => optional($article->publish_date)->toIso8601String(),
         ];
     }

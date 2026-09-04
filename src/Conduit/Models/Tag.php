@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -7,9 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property string         title
- * @property integer         article_id
  * @property \Carbon\Carbon created_at
- * @property \Carbon\Carbon update_at
+ * @property \Carbon\Carbon updated_at
  */
 class Tag extends Model
 {
@@ -31,10 +32,5 @@ class Tag extends Model
     public function articles()
     {
         return $this->belongsToMany(Article::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
     }
 }

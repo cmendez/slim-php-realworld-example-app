@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Services\Database;
 
 use Illuminate\Database\Capsule\Manager;
@@ -26,12 +28,13 @@ class EloquentServiceProvider implements ServiceProviderInterface
         $connectionSettings = [
             'driver'    => $config['driver'],
             'host'      => $config['host'],
+            'port'      => $config['port'],
             'database'  => $config['database'],
             'username'  => $config['username'],
             'password'  => $config['password'],
-            'charset'   => 'utf8',
-            'collation' => 'utf8_unicode_ci',
-            'prefix'    => '',
+            'charset'   => $config['charset'],
+            'collation' => $config['collation'],
+            'prefix'    => $config['prefix'],
         ];
 
         // 2. NUEVO: Detectamos si estamos en Producción (Render) para activar SSL
@@ -47,7 +50,6 @@ class EloquentServiceProvider implements ServiceProviderInterface
 
         // 3. Pasamos la configuración final a Eloquent
         $capsule->addConnection($connectionSettings);
-
         // Make this Capsule instance available globally via static methods... (optional)
         $capsule->setAsGlobal();
 

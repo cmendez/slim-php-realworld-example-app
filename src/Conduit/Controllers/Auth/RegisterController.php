@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Controllers\Auth;
 
 use Conduit\Models\User;
@@ -21,7 +23,7 @@ class RegisterController
     {
         $data = $request->getParsedBody()['user'] ?? [];
 
-        // Asegurarnos de que los campos necesarios existen
+        // Ensure necessary fields exist
         if (empty($data['username']) || empty($data['email']) || empty($data['password'])) {
              return $response->withJson(['errors' => ['body' => ['Invalid data provided']]], 422);
         }
@@ -29,12 +31,12 @@ class RegisterController
         $user = new User([
             'username' => $data['username'],
             'email' => $data['email'],
-            'password' => $data['password'], // El mutator en User.php se encargará de hashear esto
+            'password' => $data['password'], // The mutator in User.php will handle hashing this
         ]);
 
         $user->save();
 
-        // Generar el token para el nuevo usuario
+        // Generate token for the new user
         $token = $this->auth->generateToken($user);
 
         $userData = [

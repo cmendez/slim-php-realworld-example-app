@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Controllers\User;
 
 use Conduit\Transformers\UserTransformer;
-use Interop\Container\ContainerInterface;
 use League\Fractal\Resource\Item;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -24,7 +25,7 @@ class UserController
     /**
      * UserController constructor.
      *
-     * @param \Interop\Container\ContainerInterface $container
+     * @param \Slim\Container $container
      *
      * @internal param $auth
      */
@@ -42,7 +43,7 @@ class UserController
             $data = $this->fractal->createData(new Item($user, new UserTransformer()))->toArray();
 
             return $response->withJson(['user' => $data]);
-        };
+        }
     }
 
     public function update(Request $request, Response $response)
@@ -57,18 +58,17 @@ class UserController
             }
 
             $user->update([
-                'email'    => isset($requestParams['email']) ? $requestParams['email'] : $user->email,
-                'username' => isset($requestParams['username']) ? $requestParams['username'] : $user->username,
-                'bio'      => isset($requestParams['bio']) ? $requestParams['bio'] : $user->bio,
-                'image'    => isset($requestParams['image']) ? $requestParams['image'] : $user->image,
-                'password' => isset($requestParams['password']) ? password_hash($requestParams['password'],
-                    PASSWORD_DEFAULT) : $user->password,
+                'email'    => $requestParams['email'] ?? $user->email,
+                'username' => $requestParams['username'] ?? $user->username,
+                'bio'      => $requestParams['bio'] ?? $user->bio,
+                'image'    => $requestParams['image'] ?? $user->image,
+                'password' => $requestParams['password'] ?? $user->password,
             ]);
 
             $data = $this->fractal->createData(new Item($user, new UserTransformer()))->toArray();
 
             return $response->withJson(['user' => $data]);
-        };
+        }
     }
 
     /**
