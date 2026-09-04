@@ -19,6 +19,7 @@ if (file_exists(ROOT . '.env')) {
 
 return [
     'settings' => [
+        // Si la variable APP_ENV no es 'production', muestra errores (de tu rama merge)
         'displayErrorDetails'    => getenv('APP_ENV') !== 'production', // set to false in production
         'addContentLengthHeader' => false, // Allow the web server to send the content-length header
 
