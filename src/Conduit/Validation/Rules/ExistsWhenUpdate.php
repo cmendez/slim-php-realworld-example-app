@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Validation\Rules;
 
 use Respect\Validation\Rules\AbstractRule;

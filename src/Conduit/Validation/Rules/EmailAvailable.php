@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Validation\Rules;
 
 use Conduit\Models\User;

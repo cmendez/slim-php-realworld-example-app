@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Conduit\Models\User    user
  * @property \Conduit\Models\Article article
  * @property \Carbon\Carbon          created_at
- * @property \Carbon\Carbon          update_at
+ * @property \Carbon\Carbon          updated_at
  */
 class Comment extends Model
 {

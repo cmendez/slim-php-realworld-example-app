@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Validation;
 
 use Psr\Http\Message\ServerRequestInterface;
@@ -21,6 +23,7 @@ class Validator
      */
     public function validate(ServerRequestInterface $request, array $rules)
     {
+        $this->errors = [];
         /** @var \Respect\Validation\Validator $rule */
         foreach ($rules as $field => $rule) {
             try {
@@ -29,8 +32,6 @@ class Validator
                 $this->errors[$field] = $e->getMessages();
             }
         }
-        $_SESSION['errors'] = $this->errors;
-
 
         return $this;
     }
@@ -45,6 +46,7 @@ class Validator
      */
     public function validateArray(array $values, array $rules)
     {
+        $this->errors = [];
         /** @var \Respect\Validation\Validator $rule */
         foreach ($rules as $field => $rule) {
             try {
@@ -53,8 +55,6 @@ class Validator
                 $this->errors[$field] = $e->getMessages();
             }
         }
-        $_SESSION['errors'] = $this->errors;
-
 
         return $this;
     }
@@ -80,7 +80,7 @@ class Validator
     }
 
     /**
-     * get the value of the array
+     * Get the value of the array
      *
      * @param $values
      * @param $field

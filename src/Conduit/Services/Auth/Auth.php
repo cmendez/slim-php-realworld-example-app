@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Services\Auth;
 
 use Conduit\Models\User;
@@ -12,7 +14,8 @@ use Slim\Http\Request;
 class Auth
 {
 
-    const SUBJECT_IDENTIFIER = 'username';
+    public const SUBJECT_IDENTIFIER = 'username';
+    public const JWT_ALGORITHM = 'HS256';
 
     /**
      * @var \Illuminate\Database\Capsule\Manager
@@ -58,7 +61,7 @@ class Auth
         ];
 
         $secret = $this->appConfig['jwt']['secret'];
-        $token = JWT::encode($payload, $secret, "HS256");
+        $token = JWT::encode($payload, $secret, self::JWT_ALGORITHM);
 
         return $token;
     }
@@ -93,10 +96,12 @@ class Auth
      */
     public function requestUser(Request $request)
     {
-        // Should add more validation to the present and validity of the token?
+        // Should add more validation to the presence and validity of the token?
         if ($token = $request->getAttribute('token')) {
             return User::where(static::SUBJECT_IDENTIFIER, '=', $token->sub)->first();
-        };
+        }
+
+        return null;
     }
 
 }

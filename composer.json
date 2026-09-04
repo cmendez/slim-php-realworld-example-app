@@ -40,7 +40,12 @@
     },
     "config": {
         "process-timeout" : 0,
-        "php": "5.6"
+        "php": "5.6",
+        "policy": {
+            "advisories": {
+                "block": false
+            }
+        }
     },
     "scripts": {
         "post-install-cmd": [

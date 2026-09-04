@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Services\Auth;
 
-use Interop\Container\ContainerInterface;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 

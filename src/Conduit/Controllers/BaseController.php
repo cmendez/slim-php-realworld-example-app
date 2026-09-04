@@ -1,21 +1,21 @@
 <?php
 
-namespace Conduit\Controllers;
+declare(strict_types=1);
 
-use Interop\Container\ContainerInterface;
+namespace Conduit\Controllers;
 
 class BaseController
 {
 
     /**
-     * @var \Interop\Container\ContainerInterface
+     * @var \Slim\Container
      */
     protected $container;
 
     /**
      * BaseController constructor.
      *
-     * @param \Interop\Container\ContainerInterface $container
+     * @param \Slim\Container $container
      */
     public function __construct(\Slim\Container $container)
     {

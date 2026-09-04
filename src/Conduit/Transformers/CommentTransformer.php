@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Transformers;
 
 use Conduit\Models\Article;
@@ -40,7 +42,7 @@ class CommentTransformer extends TransformerAbstract
         return [
             'id'        => $comment->id,
             'createdAt' => $comment->created_at->toIso8601String(),
-            'updatedAt' => isset($user->update_at) ? $comment->update_at->toIso8601String() : $comment->update_at,
+            'updatedAt' => isset($comment->updated_at) ? $comment->updated_at->toIso8601String() : $comment->updated_at,
             'body'      => $comment->body,
         ];
     }

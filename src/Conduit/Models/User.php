@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -13,11 +15,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property string                                   token
  * @property string                                   password
  * @property \Carbon\Carbon                           created_at
- * @property \Carbon\Carbon                           update_at
+ * @property \Carbon\Carbon                           updated_at
  * @property \Illuminate\Database\Eloquent\Collection followings Users who are followed by this user
  */
 class User extends Model
 {
+    public const DEFAULT_IMAGE = 'https://static.productionready.io/images/smiley-cyrus.jpg';
 
     /**
      * The attributes that are mass assignable.
@@ -31,8 +34,8 @@ class User extends Model
         'token',
         'image',
         'bio',
-        'twitter_url', // <-- Añadir esta línea
-        'linkedin_url', // <-- Añadir esta línea        
+        'twitter_url',
+        'linkedin_url',
     ];
 
     /**
@@ -54,7 +57,7 @@ class User extends Model
     public function getImageAttribute($value)
     {
         if (is_null($value)) {
-            return 'https://static.productionready.io/images/smiley-cyrus.jpg';
+            return self::DEFAULT_IMAGE;
         }
 
         return $value;

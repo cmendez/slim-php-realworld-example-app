@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Conduit\Controllers\Article;
 
 use Conduit\Models\Article;
 use Conduit\Models\Comment;
 use Conduit\Transformers\ArticleTransformer;
 use Conduit\Transformers\CommentTransformer;
-use Interop\Container\ContainerInterface;
 use League\Fractal\Resource\Collection;
 use League\Fractal\Resource\Item;
 use Slim\Http\Request;
@@ -26,9 +27,9 @@ class CommentController
     protected $fractal;
 
     /**
-     * UserController constructor.
+     * CommentController constructor.
      *
-     * @param \Interop\Container\ContainerInterface $container
+     * @param \Slim\Container $container
      *
      * @internal param $auth
      */
