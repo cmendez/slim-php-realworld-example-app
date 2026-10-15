@@ -72,7 +72,8 @@ return [
         ],
 
         'unsplash' => [
-            'access_key' => getenv('UNSPLASH')  // Don't forget to configure this variable in the .env file, example: UNSPLASH=xxxxxxxxxxx
+            // UNSPLASH remains as a temporary fallback for existing local environments.
+            'access_key' => getenv('UNSPLASH_ACCESS_KEY') ?: getenv('UNSPLASH')
         ]
     ],
 ];

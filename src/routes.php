@@ -88,6 +88,9 @@ $app->group('/api',
         $this->get('/images/search', ImageSearchController::class . ':search')
             ->add($jwtMiddleware) 
             ->setName('images.search');
+        $this->post('/images/{id}/download', ImageSearchController::class . ':trackDownload')
+            ->add($jwtMiddleware)
+            ->setName('images.download');
 
         // Tags Route
         $this->get('/tags', TagController::class . ':index')->setName('tags.index');

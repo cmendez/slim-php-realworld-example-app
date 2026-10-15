@@ -10,8 +10,10 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
-    && docker-php-ext-install pdo_mysql \
-    && a2enmod rewrite
+    libcurl4-openssl-dev \
+    && docker-php-ext-install pdo_mysql curl \
+    && a2enmod rewrite \
+    && rm -rf /var/lib/apt/lists/*
 
 # Configurar Apache para que la raiz sea /public
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
