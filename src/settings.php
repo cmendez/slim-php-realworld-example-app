@@ -16,6 +16,18 @@ if (file_exists(ROOT . '.env')) {
     $dotenv->load();
 }
 
+$jwtRelaxedHosts = ['localhost', '127.0.0.1'];
+$configuredHosts = [
+    getenv('RENDER_EXTERNAL_HOSTNAME'),
+    parse_url((string) getenv('APP_URL'), PHP_URL_HOST),
+];
+
+foreach ($configuredHosts as $configuredHost) {
+    if ($configuredHost && !in_array($configuredHost, $jwtRelaxedHosts, true)) {
+        $jwtRelaxedHosts[] = $configuredHost;
+    }
+}
+
 
 return [
     'settings' => [
@@ -66,7 +78,10 @@ return [
         // jwt settings
         'jwt'  => [
             'secret' => getenv('JWT_SECRET'),
+            // Render terminates TLS at its proxy, so PHP receives the trusted
+            // internal hop as HTTP even though the browser used HTTPS.
             'secure' => getenv('APP_ENV') === 'production',
+            'relaxed' => $jwtRelaxedHosts,
             'header' => 'Authorization',
             'regexp' => '/Token\s+(.*)$/i',
             'passthrough' => ['OPTIONS']
