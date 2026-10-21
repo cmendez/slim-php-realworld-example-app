@@ -50,6 +50,13 @@ $container['optionalAuth'] = function ($c) {
   return new OptionalAuth($c);
 };
 
+$container['pythonClient'] = function ($c) {
+    return new \Conduit\Services\Python\PythonClient(
+        $c->get('settings')['python_api'],
+        $c->get('logger')
+    );
+};
+
 
 // Request Validator
 $container['validator'] = function ($c) {

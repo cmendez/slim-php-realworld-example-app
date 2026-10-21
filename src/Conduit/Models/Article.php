@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string                                   title
  * @property string                                   description
  * @property string                                   body
+ * @property string|null                              image
  * @property integer                                  user_id
  * @property \Conduit\Models\User                     user
  * @property \Illuminate\Database\Eloquent\Collection comments
@@ -33,6 +34,7 @@ class Article extends Model
         'title',
         'description',
         'body',
+        'image',
         'user_id',
         'publish_date',
     ];

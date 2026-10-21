@@ -143,6 +143,7 @@ class ArticleController
             'title'       => v::notEmpty(),
             'description' => v::notEmpty(),
             'body'        => v::notEmpty(),
+            'image'       => v::optional(v::url()),
             // Keep validation to ensure correct format
             'publishDate' => v::optional(v::date()), 
         ]);
@@ -156,6 +157,7 @@ class ArticleController
             'title' => $data['title'],
             'description' => $data['description'],
             'body' => $data['body'],
+            'image' => !empty($data['image']) ? $data['image'] : null,
         ]);
         
         $article->slug = str_slug($article->title);
@@ -211,6 +213,7 @@ class ArticleController
             // Make all fields optional on update
             'title'       => v::optional(v::notEmpty()),
             'description' => v::optional(v::notEmpty()),
+            'image'       => v::optional(v::url()),
             'publishDate' => v::optional(v::date()),
         ]);
 
@@ -231,6 +234,10 @@ class ArticleController
 
         if (isset($params['body'])) {
             $article->body = $params['body'];
+        }
+
+        if (array_key_exists('image', $params)) {
+            $article->image = !empty($params['image']) ? $params['image'] : null;
         }
 
         // --- 3. HANDLE PUBLISH DATE WITH CARBON ---

@@ -33,6 +33,7 @@ return [
         // Python API
         'python_api'             => [
             'url' => getenv('PYTHON_API_URL') ?: 'http://host.docker.internal:8080',
+            'service_secret' => getenv('PYTHON_SERVICE_SECRET'),
         ],
 
         // Renderer settings
@@ -72,7 +73,8 @@ return [
         ],
 
         'unsplash' => [
-            'access_key' => getenv('UNSPLASH')  // Don't forget to configure this variable in the .env file, example: UNSPLASH=xxxxxxxxxxx
+            // UNSPLASH remains as a temporary fallback for existing local environments.
+            'access_key' => getenv('UNSPLASH_ACCESS_KEY') ?: getenv('UNSPLASH')
         ]
     ],
 ];

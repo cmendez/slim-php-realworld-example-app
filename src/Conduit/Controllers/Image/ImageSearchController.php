@@ -22,10 +22,14 @@ class ImageSearchController extends BaseController
 
         // 1. Get the search parameter
         $queryParams = $request->getQueryParams();
-        $query = $queryParams['q'] ?? '';
+        $query = trim((string) ($queryParams['q'] ?? ''));
 
-        if (empty($query)) {
+        if ($query === '') {
             return $response->withJson(['error' => 'Query parameter "q" is required'], 400);
+        }
+
+        if (strlen($query) > 100) {
+            return $response->withJson(['error' => 'Query parameter "q" is too long'], 400);
         }
 
         // 2. Get the API Key from the configuration
@@ -39,57 +43,118 @@ class ImageSearchController extends BaseController
         $apiUrl = 'https://api.unsplash.com/search/photos?' . http_build_query([
             'query' => $query,
             'per_page' => 12,
-            'orientation' => 'landscape'
+            'orientation' => 'landscape',
+            'content_filter' => 'high',
         ]);
 
-        // 4. Initialize and configure cURL
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $apiUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Client-ID ' . $accessKey,
-            'Accept-Version: v1',
-            'User-Agent: Conduit-Realworld-Clone'
-        ]);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-
-        // 5. Execute the call
-        $responseBody = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        // 6. Handle cURL errors
-        if (curl_errno($ch)) {
-            $errorMsg = curl_error($ch);
-            curl_close($ch);
-            $logger->error('cURL Error calling Unsplash: ' . $errorMsg);
+        // 4. Call Unsplash from the backend so the access key is never exposed.
+        $unsplashResponse = $this->callUnsplash($apiUrl, $accessKey);
+        if ($unsplashResponse['error'] !== null) {
+            $logger->error('cURL Error calling Unsplash: ' . $unsplashResponse['error']);
             return $response->withJson(['error' => 'Failed to fetch images from service'], 502);
         }
-        curl_close($ch);
 
-        // 7. Handle API errors (e.g., 401, 403)
-        if ($httpCode >= 400) {
-             $logger->error("Unsplash API returned status $httpCode");
-             return $response->withJson(['error' => 'Image service returned an error'], $httpCode);
+        // Do not leak an upstream 401 as if the student's session had expired.
+        if ($unsplashResponse['status'] < 200 || $unsplashResponse['status'] >= 300) {
+             $logger->error('Unsplash API returned status ' . $unsplashResponse['status']);
+             return $response->withJson(['error' => 'Image service returned an error'], 502);
         }
 
-        // 8. Decode and clean the response
-        $data = json_decode($responseBody, true);
+        // 5. Decode and expose only the fields required by the frontend.
+        $data = json_decode($unsplashResponse['body'], true);
         if (json_last_error() !== JSON_ERROR_NONE || !isset($data['results'])) {
              $logger->error('Failed to decode JSON response from Unsplash');
              return $response->withJson(['error' => 'Invalid response from image service'], 502);
         }
 
-        $cleanedResults = array_map(function ($image) {
-            return [
+        $cleanedResults = [];
+        foreach ($data['results'] as $image) {
+            if (empty($image['id']) || empty($image['urls']['small']) || empty($image['urls']['regular'])) {
+                continue;
+            }
+
+            $cleanedResults[] = [
                 'id' => $image['id'],
-                'alt' => $image['alt_description'],
+                'alt' => $image['alt_description'] ?? $image['description'] ?? '',
                 'url_small' => $image['urls']['small'],
                 'url_regular' => $image['urls']['regular'],
-                'user_name' => $image['user']['name'],
+                'user_name' => $image['user']['name'] ?? 'Unsplash contributor',
+                'user_url' => $this->withReferralParameters(
+                    $image['user']['links']['html'] ?? 'https://unsplash.com'
+                ),
+                'photo_url' => $this->withReferralParameters(
+                    $image['links']['html'] ?? 'https://unsplash.com'
+                ),
+                'download_location' => $image['links']['download_location'] ?? null,
             ];
-        }, $data['results']);
+        }
 
-        // 9. Return the cleaned results to the frontend
         return $response->withJson(['images' => $cleanedResults]);
+    }
+
+    /**
+     * Notify Unsplash when the application uses a selected photo.
+     */
+    public function trackDownload(Request $request, Response $response, array $args)
+    {
+        $logger = $this->container->get('logger');
+        $settings = $this->container->get('settings');
+        $accessKey = $settings['unsplash']['access_key'] ?? '';
+        $imageId = (string) ($args['id'] ?? '');
+
+        if ($accessKey === '') {
+            return $response->withJson(['error' => 'Image search is not configured'], 500);
+        }
+
+        if (!preg_match('/^[A-Za-z0-9_-]+$/', $imageId)) {
+            return $response->withJson(['error' => 'Invalid image id'], 400);
+        }
+
+        $apiUrl = 'https://api.unsplash.com/photos/' . rawurlencode($imageId) . '/download';
+        $unsplashResponse = $this->callUnsplash($apiUrl, $accessKey);
+
+        if ($unsplashResponse['error'] !== null
+            || $unsplashResponse['status'] < 200
+            || $unsplashResponse['status'] >= 300) {
+            $logger->error('Failed to track Unsplash download for image ' . $imageId);
+            return $response->withJson(['error' => 'Failed to track image selection'], 502);
+        }
+
+        return $response->withStatus(204);
+    }
+
+    private function callUnsplash($url, $accessKey)
+    {
+        if (!function_exists('curl_init')) {
+            return ['body' => false, 'status' => 0, 'error' => 'PHP cURL extension is not installed'];
+        }
+
+        $ch = curl_init($url);
+        if ($ch === false) {
+            return ['body' => false, 'status' => 0, 'error' => 'Could not initialize cURL'];
+        }
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Client-ID ' . $accessKey,
+            'Accept-Version: v1',
+            'User-Agent: Conduit-Realworld-Classroom',
+        ]);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+        $body = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_errno($ch) ? curl_error($ch) : null;
+        curl_close($ch);
+
+        return ['body' => $body, 'status' => $status, 'error' => $error];
+    }
+
+    private function withReferralParameters($url)
+    {
+        $separator = strpos($url, '?') === false ? '?' : '&';
+
+        return $url . $separator . 'utm_source=conduit_realworld&utm_medium=referral';
     }
 }

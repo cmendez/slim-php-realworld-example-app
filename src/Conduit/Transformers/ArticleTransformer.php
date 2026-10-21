@@ -41,6 +41,7 @@ class ArticleTransformer extends TransformerAbstract
             "title"          => $article->title,
             "description"    => $article->description,
             "body"           => $article->body,
+            "image"          => $article->image,
             "tagList"        => optional($article->tags)->pluck('title'),
             'createdAt'      => $article->created_at->toIso8601String(),
             'updatedAt'      => isset($article->updated_at) ? $article->updated_at->toIso8601String() : $article->updated_at,

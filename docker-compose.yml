@@ -15,6 +15,9 @@ services:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
+      - UNSPLASH_ACCESS_KEY=${UNSPLASH_ACCESS_KEY:-}
+      - PYTHON_API_URL=${PYTHON_API_URL:-http://host.docker.internal:8080}
+      - PYTHON_SERVICE_SECRET=${PYTHON_SERVICE_SECRET:-local-development-service-secret}
     depends_on:
       - db
 

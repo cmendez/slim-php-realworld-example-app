@@ -15,6 +15,7 @@ use Conduit\Models\Tag;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Conduit\Controllers\Image\ImageSearchController;
+use Conduit\Controllers\Python\PythonArticleController;
 
 // Api Routes
 $app->group('/api',
@@ -88,6 +89,14 @@ $app->group('/api',
         $this->get('/images/search', ImageSearchController::class . ':search')
             ->add($jwtMiddleware) 
             ->setName('images.search');
+        $this->post('/images/{id}/download', ImageSearchController::class . ':trackDownload')
+            ->add($jwtMiddleware)
+            ->setName('images.download');
+
+        // Architecture demo: Angular calls PHP and PHP calls the internal Python API.
+        $this->get('/python/articles', PythonArticleController::class . ':index')
+            ->add($jwtMiddleware)
+            ->setName('python.articles');
 
         // Tags Route
         $this->get('/tags', TagController::class . ':index')->setName('tags.index');
