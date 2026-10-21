@@ -33,6 +33,7 @@ return [
         // Python API
         'python_api'             => [
             'url' => getenv('PYTHON_API_URL') ?: 'http://host.docker.internal:8080',
+            'service_secret' => getenv('PYTHON_SERVICE_SECRET'),
         ],
 
         // Renderer settings

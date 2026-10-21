@@ -76,7 +76,8 @@ class LoginController
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5); // 5 seconds timeout
+            // Render Free can take several seconds to wake the Python service.
+            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
             // Execute call
             $apiResponse = curl_exec($ch);
