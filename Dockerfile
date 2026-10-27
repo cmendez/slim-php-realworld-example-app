@@ -1,5 +1,6 @@
-# Usamos la imagen de PHP 8.5.9 con Apache integrado para Render y localhost
-FROM php:8.5.9-apache
+# PHP 8.5.12 incluye las correcciones de seguridad de PHP2Shell
+# (CVE-2026-109618 y CVE-2026-109619) para Render y localhost.
+FROM php:8.5.12-apache
 
 # --- NUEVO: Usar configuración de producción de PHP ---
 # Esto oculta los Deprecated Warnings y Errors de la respuesta HTTP
